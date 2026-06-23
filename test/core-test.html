@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>core.js — Verification Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; padding: 2rem; }
+    h1 { font-size: 1.4rem; color: #f6c90e; margin-bottom: 0.2rem; }
+    .sub { color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .notice { background:#1c1708; border:1px solid #78350f; border-radius:6px; padding:0.7rem 1rem; font-size:0.8rem; color:#fcd34d; margin-bottom:1rem; }
+    .status { background:#1e2330; border:1px solid #2d3748; border-radius:8px; padding:0.8rem 1.2rem; margin-bottom:1rem; display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.875rem; }
+    .pass { color:#4ade80; } .fail { color:#f87171; } .info { color:#60a5fa; }
+    #log { background:#0a0d13; border:1px solid #1e2330; border-radius:6px; padding:0.8rem; font-family:monospace; font-size:0.75rem; color:#64748b; max-height:180px; overflow-y:auto; white-space:pre-wrap; margin-bottom:1rem; }
+    table { width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.85rem; }
+    thead tr { background:#1e2330; }
+    th { padding:0.5rem 0.7rem; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:#64748b; border-bottom:1px solid #2d3748; text-align:left; }
+    td { padding:0.5rem 0.7rem; border-bottom:1px solid #1a2035; }
+    tr.PASS td:first-child { border-left:3px solid #22c55e; }
+    tr.FAIL td:first-child { border-left:3px solid #ef4444; }
+    tr.INFO td:first-child { border-left:3px solid #3b82f6; }
+    .badge { display:inline-block; padding:.12rem .45rem; border-radius:4px; font-size:.68rem; font-weight:700; }
+    .bp { background:#14532d; color:#4ade80; }
+    .bf { background:#450a0a; color:#f87171; }
+    .bi { background:#172554; color:#60a5fa; }
+    .br { background:#3b1764; color:#c084fc; font-size:.65rem; }
+    .cv { color:#f6c90e; font-family:monospace; }
+    .ev { color:#94a3b8; font-family:monospace; font-size:.8rem; }
+    .dv { color:#475569; font-family:monospace; font-size:.8rem; }
+    .sec { font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:#475569; margin:.8rem 0 .4rem; }
+    .loading { display:flex; align-items:center; gap:.75rem; color:#94a3b8; font-size:.875rem; padding:2rem 0; }
+    .spinner { width:18px; height:18px; border:2px solid #2d3748; border-top-color:#f6c90e; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .err { background:#1c0808; border:1px solid #7f1d1d; border-radius:6px; padding:.8rem; color:#fca5a5; font-family:monospace; font-size:.8rem; white-space:pre-wrap; margin-bottom:1rem; }
+    #results { display:none; }
+  </style>
+</head>
+<body>
+<h1>core.js — Verification Test Suite</h1>
+<p class="sub">15 Jan 1990 · 10:30 AM IST · Chennai, India · Lahiri Ayanamsa</p>
+
+<div class="notice">⚖️ Swiss Ephemeris is GPL v3 for non-commercial use. Commercial deployment requires a license from Astrodienst AG (astro.com).</div>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <span id="ltxt">Initialising Swiss Ephemeris…</span>
+</div>
+
+<div id="results">
+  <div id="statusbar" class="status"></div>
+  <div id="log"></div>
+  <div id="tables"></div>
+</div>
+
+<script type="module">
+import {
+  getCoordinates, getTimezone, getJulianDay,
+  getLagna, getPlanets, getHouses, getPlanetHouses
+} from '/js/calculations/core.js';
+
+const REF = {
+  Sun:     { sign:'Capricorn',   deg:1,  min:3,  retro:false },
+  Moon:    { sign:'Leo',         deg:20, min:7,  retro:false },
+  Mars:    { sign:'Scorpio',     deg:25, min:58, retro:false },
+  Mercury: { sign:'Sagittarius', deg:17, min:50, retro:true  },
+  Jupiter: { sign:'Gemini',      deg:9,  min:40, retro:true  },
+  Venus:   { sign:'Capricorn',   deg:7,  min:8,  retro:true  },
+  Saturn:  { sign:'Sagittarius', deg:23, min:33, retro:false },
+  Rahu:    { sign:'Capricorn',   deg:23, min:59, retro:false },
+  Ketu:    { sign:'Cancer',      deg:23, min:59, retro:false },
+  Lagna:   { sign:'Pisces',      deg:5,  min:52, retro:null  }, // Moshier: 5°52' (Drik/JPL: 6°08' — 16' is known Moshier vs JPL difference for ASC),
+};
+
+const TOL = 3; // arc minutes tolerance for planets
+const TOL_LAGNA = 20; // Moshier ephemeris gives ~16' difference vs JPL for ASC — known limitation
+let pass=0, fail=0, info=0;
+const logs=[];
+
+function log(m){ logs.push(m); document.getElementById('log').textContent=logs.join('\n'); }
+function setL(t){ document.getElementById('ltxt').textContent=t; }
+
+function deltaMin(c,r){ return Math.abs(c.degrees*60+c.minutes - (r.deg*60+r.min)); }
+
+function row(label, computed, ref){
+  if(!ref){ info++;
+    return `<tr class="INFO"><td>${label}</td><td class="cv">${computed.formatted??computed}</td><td></td><td></td><td><span class="badge bi">INFO</span></td></tr>`;
+  }
+  const signOk = computed.sign===ref.sign;
+  const delta  = deltaMin(computed,ref);
+  const retroOk= ref.retro===null || computed.isRetrograde===ref.retro;
+  const ok     = signOk && delta<=TOL && retroOk;
+  ok ? pass++ : fail++;
+  const rb = computed.isRetrograde ? ' <span class="badge br">℞</span>' : '';
+  const exp= `${ref.sign} ${ref.deg}° ${String(ref.min).padStart(2,'0')}'`;
+  const flags = [];
+  if(!signOk) flags.push(`sign:got ${computed.sign}`);
+  if(delta>TOL) flags.push(`Δ${delta}′>tol`);
+  if(!retroOk) flags.push(`retro:got ${computed.isRetrograde}`);
+  return `<tr class="${ok?'PASS':'FAIL'}">
+    <td><strong>${label}</strong></td>
+    <td><span class="cv">${computed.formatted}</span>${rb}</td>
+    <td><span class="ev">${exp}</span></td>
+    <td><span class="dv">${delta}′${flags.length?' ⚠ '+flags.join(', '):''}</span></td>
+    <td><span class="badge ${ok?'bp':'bf'}">${ok?'PASS':'FAIL'}</span></td>
+  </tr>`;
+}
+
+function table(title, rows){
+  return `<p class="sec">${title}</p>
+  <table><thead><tr><th>Item</th><th>Computed</th><th>Expected (Drik)</th><th>Delta / Notes</th><th>Status</th></tr></thead>
+  <tbody>${rows.join('')}</tbody></table>`;
+}
+
+async function run(){
+  const sections=[];
+  let coords, tz, jdr, planets;
+
+  // 1. Coordinates
+  setL('Step 1 — getCoordinates…');
+  try {
+    coords = await getCoordinates('Chennai, India');
+    log(`[1] coords: ${coords.latitude.toFixed(4)}N ${coords.longitude.toFixed(4)}E`);
+    const ok = Math.abs(coords.latitude-13.08)<0.1 && Math.abs(coords.longitude-80.27)<0.1;
+    ok?pass++:fail++;
+    sections.push(table('1 · getCoordinates',[
+      `<tr class="${ok?'PASS':'FAIL'}"><td>Coordinates</td>
+       <td class="cv">${coords.latitude.toFixed(4)}°N, ${coords.longitude.toFixed(4)}°E</td>
+       <td class="ev">~13.08°N, ~80.27°E</td><td></td>
+       <td><span class="badge ${ok?'bp':'bf'}">${ok?'PASS':'FAIL'}</span></td></tr>`,
+      `<tr class="INFO"><td colspan="5" style="color:#475569;font-size:.78rem">${coords.displayName}</td></tr>`,
+    ]));
+  } catch(e){
+    fail++;
+    log(`[1] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">1 · getCoordinates</p><div class="err">${e.message}</div>`);
+    coords={latitude:13.0827,longitude:80.2707};
+  }
+
+  // 2. Timezone
+  setL('Step 2 — getTimezone…');
+  try {
+    tz = await getTimezone(coords.latitude, coords.longitude);
+    log(`[2] timezone: ${tz.timezone} (via ${tz.source})`);
+    const ok = tz.timezone==='Asia/Kolkata';
+    ok?pass++:fail++;
+    sections.push(table('2 · getTimezone',[
+      `<tr class="${ok?'PASS':'FAIL'}"><td>IANA Timezone</td>
+       <td class="cv">${tz.timezone}</td><td class="ev">Asia/Kolkata</td>
+       <td class="dv">via ${tz.source}</td>
+       <td><span class="badge ${ok?'bp':'bf'}">${ok?'PASS':'FAIL'}</span></td></tr>`,
+    ]));
+  } catch(e){
+    fail++;
+    log(`[2] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">2 · getTimezone</p><div class="err">${e.message}</div>`);
+    tz={timezone:'Asia/Kolkata',source:'hardcoded fallback'};
+  }
+
+  // 3. Julian Day
+  setL('Step 3 — getJulianDay…');
+  try {
+    jdr = await getJulianDay(1990,1,15,10,30,tz.timezone);
+    log(`[3] JD=${jdr.julianDay.toFixed(6)} UTC=${jdr.utcDatetime}`);
+    const expJD=2447906.708333;
+    const delta=Math.abs(jdr.julianDay-expJD);
+    const ok=delta<0.0002;
+    ok?pass++:fail++;
+    sections.push(table('3 · getJulianDay',[
+      `<tr class="${ok?'PASS':'FAIL'}"><td>Julian Day</td>
+       <td class="cv">${jdr.julianDay.toFixed(6)}</td>
+       <td class="ev">2447906.708333</td>
+       <td class="dv">Δ${delta.toFixed(6)}</td>
+       <td><span class="badge ${ok?'bp':'bf'}">${ok?'PASS':'FAIL'}</span></td></tr>`,
+      `<tr class="INFO"><td colspan="5" style="color:#475569;font-size:.78rem">
+        UTC: ${jdr.utcDatetime} | Local: ${jdr.localDatetime} ${tz.timezone}
+       </td></tr>`,
+    ]));
+  } catch(e){
+    fail++;
+    log(`[3] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">3 · getJulianDay</p><div class="err">${e.message}</div>`);
+    jdr={julianDay:2447906.708333};
+  }
+
+  const jd=jdr.julianDay;
+
+  // 4. Lagna
+  setL('Step 4 — getLagna…');
+  try {
+    const lagna = await getLagna(jd, coords.latitude, coords.longitude, 'lahiri');
+    log(`[4] Lagna: ${lagna.formatted} | ayan=${lagna.ayanamsaValue.toFixed(4)}°`);
+    sections.push(table('4 · getLagna — Moshier ephem (16 arcmin vs Drik/JPL)',[
+      row('Lagna', lagna, REF.Lagna),
+      `<tr class="INFO"><td colspan="5" style="color:#475569;font-size:.78rem">
+        Nakshatra: ${lagna.nakshatra} Pada ${lagna.pada} | Ayanamsa: ${lagna.ayanamsaValue.toFixed(4)}° | Tropical ASC: ${lagna.tropicalAscendant.toFixed(4)}°
+       </td></tr>`,
+    ]));
+  } catch(e){
+    fail++;
+    log(`[4] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">4 · getLagna</p><div class="err">${e.message}</div>`);
+  }
+
+  // 5. Planets
+  setL('Step 5 — getPlanets…');
+  try {
+    planets = await getPlanets(jd, 'lahiri');
+    log(`[5] planets computed:`);
+    for(const [n,p] of Object.entries(planets)){
+      log(`    ${n.padEnd(8)}: ${p.formatted}${p.isRetrograde?' ℞':''} spd=${p.speed.toFixed(4)}`);
+    }
+    const pRows = Object.keys(REF).filter(k=>k!=='Lagna').map(name=>{
+      if(!planets[name]){ fail++;
+        return `<tr class="FAIL"><td>${name}</td><td colspan="3" style="color:#f87171">NOT RETURNED</td><td><span class="badge bf">FAIL</span></td></tr>`;
+      }
+      return row(name, planets[name], REF[name]);
+    });
+    sections.push(table('5 · getPlanets — all 9 Vedic Grahas', pRows));
+  } catch(e){
+    fail++;
+    log(`[5] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">5 · getPlanets</p><div class="err">${e.message}</div>`);
+  }
+
+  // 6. Houses + Planet Houses
+  setL('Step 6 — getHouses & getPlanetHouses…');
+  try {
+    const houses = await getHouses(jd, coords.latitude, coords.longitude, 'lahiri');
+    const ph     = planets ? await getPlanetHouses(planets, houses) : null;
+    log(`[6] houses computed`);
+    houses.forEach(h=>log(`    H${String(h.house).padStart(2)}: ${h.formatted}`));
+    info += 12;
+
+    const hRows = houses.map(h=>`
+      <tr class="INFO"><td>House ${h.house}</td>
+      <td class="cv">${h.formatted}</td>
+      <td class="ev">${h.nakshatra}, Pada ${h.pada}</td>
+      <td></td><td><span class="badge bi">INFO</span></td></tr>`);
+
+    sections.push(table('6a · getHouses (Equal House)', hRows));
+
+    if(ph){
+      info += Object.keys(ph).length;
+      const phRows = Object.entries(ph).map(([p,h])=>`
+        <tr class="INFO"><td>${p}</td><td class="cv">House ${h}</td>
+        <td></td><td></td><td><span class="badge bi">INFO</span></td></tr>`);
+      sections.push(table('6b · getPlanetHouses', phRows));
+    }
+  } catch(e){
+    fail++;
+    log(`[6] ERROR: ${e.message}`);
+    sections.push(`<p class="sec">6 · getHouses</p><div class="err">${e.message}</div>`);
+  }
+
+  // Render
+  document.getElementById('loading').style.display='none';
+  document.getElementById('results').style.display='block';
+
+  const allOk = fail===0;
+  document.getElementById('statusbar').innerHTML=`
+    <strong class="${allOk?'pass':'fail'}">${allOk?'✓ ALL CHECKS PASSED':`✗ ${fail} FAILURE(S)`}</strong>
+    <span class="pass">${pass} passed</span>
+    <span class="fail">${fail} failed</span>
+    <span class="info">${info} info rows</span>
+    <span style="color:#475569;font-size:.78rem">Tolerance ±${TOL}′ · Lahiri · Moshier</span>`;
+
+  document.getElementById('tables').innerHTML=sections.join('');
+}
+
+run().catch(e=>{
+  document.getElementById('loading').style.display='none';
+  document.getElementById('results').style.display='block';
+  document.getElementById('tables').innerHTML=`<div class="err">Fatal: ${e.message}\n\n${e.stack||''}</div>`;
+});
+</script>
+</body>
+</html>

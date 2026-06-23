@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Generate your Vedic birth chart — free and precise."/>
+  <title>Your Chart — Prarabdham</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo-small">prar<span>a</span>bdham</a>
+    <nav>
+      <a href="chart.html">Chart</a>
+      <a href="index.html#what-is">What is Astrology</a>
+      <span class="nav-lang" title="Language toggle coming soon">EN</span>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="container chart-page">
+
+  <!-- ── Input Section ── -->
+  <section id="chart-input-section">
+    <h1>Know Your Chart</h1>
+    <p class="subtitle">Enter your birth details. Nothing is stored.</p>
+
+    <div class="form-card">
+      <div id="form-error" class="form-error"></div>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="f-name">Full name <span style="color:var(--text-3);font-style:italic">(optional)</span></label>
+        <input type="text" id="f-name" placeholder="How this chart is addressed"/>
+      </div>
+
+      <!-- Date + Time -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="f-date">Date of birth</label>
+          <input type="date" id="f-date" required/>
+        </div>
+        <div class="form-group">
+          <label for="f-time">Time of birth</label>
+          <input type="time" id="f-time" id="f-time"/>
+        </div>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-no-time"/>
+        I don't know my exact birth time
+      </label>
+      <p class="noon-note" id="noon-note">12:00 noon will be used. The Lagna and house cusps may be inaccurate — Moon sign and Dasha calculation will still be reliable.</p>
+
+      <!-- Place -->
+      <div class="form-group" style="margin-top:1.5rem;position:relative">
+        <label for="f-place">Place of birth</label>
+        <input type="text" id="f-place" placeholder="City, country…" autocomplete="off"/>
+        <div id="place-results" class="place-results"></div>
+        <p class="place-confirmed" id="place-confirmed"></p>
+      </div>
+
+      <!-- Ayanamsa -->
+      <div class="form-group">
+        <label for="f-ayanamsa">Ayanamsa</label>
+        <select id="f-ayanamsa">
+          <option value="lahiri">Lahiri — most widely used in India (default)</option>
+          <option value="raman">Raman — developed by B.V. Raman</option>
+          <option value="krishnamurti">Krishnamurti — used in KP system</option>
+          <option value="yukteshwar">Yukteshwar — from the Holy Science</option>
+          <option value="true_citra">True Chitrapaksha — precise Lahiri variant</option>
+        </select>
+        <p class="ayanamsa-note" id="ayanamsa-note">Most widely used in traditional Jyotish. Recommended if unsure.</p>
+      </div>
+
+      <div class="form-submit">
+        <button class="btn btn-primary" id="generate-btn" type="button">Generate Chart</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Loading ── -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-msg" id="loading-msg">Calculating planetary positions…</p>
+  </div>
+
+  <!-- ── Chart Output ── -->
+  <section id="chart-output">
+
+    <!-- Header -->
+    <div class="output-header">
+      <div class="output-name" id="out-name"></div>
+      <div class="output-details" id="out-details"></div>
+    </div>
+
+    <!-- Quick info strip -->
+    <div class="quick-info" id="quick-info"></div>
+
+    <!-- Mukhya Varga charts -->
+    <div class="out-section">
+      <div class="out-section-title">Mukhya Varga — Primary Charts</div>
+      <div class="chart-grid" id="mukhya-charts"></div>
+    </div>
+
+    <!-- Advanced charts (collapsible) -->
+    <div class="out-section">
+      <button class="advanced-toggle" id="advanced-toggle">
+        <span>Advanced Charts — D2 D3 D4 D16 D27 D30 D40 D45</span>
+        <span class="arrow">▾</span>
+      </button>
+      <div id="advanced-charts">
+        <div class="chart-grid" id="advanced-chart-grid"></div>
+      </div>
+    </div>
+
+    <!-- Planetary table -->
+    <div class="out-section">
+      <div class="out-section-title">Planetary Positions</div>
+      <div class="planet-table-wrap">
+        <table class="planet-table" id="planet-table">
+          <thead>
+            <tr>
+              <th>Planet</th><th>Sign</th><th>House</th><th>Degree</th>
+              <th>Dignity</th><th>Strength</th><th>Retro</th><th>Combust</th>
+            </tr>
+          </thead>
+          <tbody id="planet-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Yogas -->
+    <div class="out-section" id="yoga-section">
+      <div class="out-section-title">Detected Yogas</div>
+      <div class="yoga-list" id="yoga-list"></div>
+    </div>
+
+    <!-- Interpretation: Lagna -->
+    <div class="out-section">
+      <div class="out-section-title">Lagna</div>
+      <div class="interp-block" id="interp-lagna"></div>
+    </div>
+
+    <!-- Interpretation: Dasha -->
+    <div class="out-section">
+      <div class="out-section-title">Current Dasha Period</div>
+      <div class="dasha-row-strip" id="dasha-strip" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
+      <div class="interp-block" id="interp-dasha"></div>
+    </div>
+
+    <!-- Interpretation: Houses -->
+    <div class="out-section">
+      <div class="out-section-title">House Readings</div>
+      <div class="house-list" id="house-list"></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="out-section">
+      <div class="out-section-title">Summary</div>
+      <div class="summary-block" id="interp-summary"></div>
+    </div>
+
+    <!-- Dasha timeline -->
+    <div class="out-section">
+      <div class="out-section-title">Vimshottari Dasha Sequence</div>
+      <div class="planet-table-wrap">
+        <table class="dasha-table" id="dasha-table">
+          <thead><tr><th>Planet</th><th>Start</th><th>End</th><th>Years</th></tr></thead>
+          <tbody id="dasha-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Closing note -->
+    <div class="closing-note" id="closing-note">
+      <span class="closing-note-label">A note on this reading</span>
+      <span id="closing-note-text"></span>
+    </div>
+
+    <!-- Actions -->
+    <div class="output-actions">
+      <button class="btn btn-ghost btn-sm" id="pdf-btn">Download PDF</button>
+      <button class="btn btn-ghost btn-sm" id="restart-btn">Start over</button>
+    </div>
+
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>Made with purpose, free forever.</p>
+    <p style="font-size:.78rem;color:#C9A84C;margin-top:.3rem;font-family:var(--font-mono)">7474YASH</p>
+    <div class="footer-links">
+      <a href="chart.html">Know Your Chart</a>
+      <a href="index.html#what-is">What is Astrology</a>
+      <a href="index.html#why">Why Astrology</a>
+      <a href="index.html#how">How It Helps</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)file:///D:/saiya/prarabdham/test/ephemeris-test.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Vedic Ephemeris Verification Test</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222; }
+  h1 { margin-bottom: 4px; }
+  .sub { color: #666; margin-top: 0; }
+  .panel { background: #f7f7f9; border: 1px solid #e3e3e8; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid #e3e3e8; text-align: left; font-variant-numeric: tabular-nums; }
+  th { background: #eef; }
+  .R { color: #c0392b; font-weight: 600; }
+  .D { color: #2c3e50; }
+  .status { padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+  .info { background: #eaf4fe; border: 1px solid #b6daff; }
+  .ok   { background: #e7f7ec; border: 1px solid #b5e3c2; }
+  .err  { background: #fdecec; border: 1px solid #f5b7b7; }
+  .warn { background: #fff8e1; border: 1px solid #ffe0a3; }
+  code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
+  .meta { color: #555; font-size: 0.92em; }
+  .deg { font-family: Consolas, Menlo, monospace; }
+</style>
+</head>
+<body>
+
+<h1>Vedic Ephemeris Verification Test</h1>
+<p class="sub">Pure-browser Swiss Ephemeris (WASM) — Moshier mode, Lahiri ayanamsa</p>
+
+<div class="panel">
+  <strong>Test birth data</strong>
+  <div class="meta">
+    Date: 15 January 1990 &nbsp;|&nbsp; Time: 10:30 IST (UTC+5:30) &nbsp;|&nbsp;
+    Place: Chennai, India (13.0827° N, 80.2707° E)<br>
+    UTC equivalent: 1990-01-15 05:00:00 UTC<br>
+    Library: <code>swisseph-wasm</code> via jsDelivr CDN (ES module)<br>
+    Ephemeris: <code>SEFLG_MOSEPH</code> (built-in Moshier, ~1 arcsecond precision, no data files needed)<br>
+    Zodiac: Sidereal, Lahiri ayanamsa (<code>SE_SIDM_LAHIRI</code>)<br>
+    Rahu/Ketu: Mean node (Vedic standard)
+  </div>
+</div>
+
+<div id="status" class="status ok">Calculation complete. Cross-check the longitudes below against a known Vedic source.</div>
+
+<div id="output"><div class="panel"><strong>Computed sidereal positions</strong><div class="meta">Julian Day (UT): <code>2447906.70833683</code>
+            &nbsp;|&nbsp; Lahiri ayanamsa at JD: <code>23.717950°</code>
+            (23° 43' 04.62")</div><table>
+    <thead><tr>
+      <th>Planet</th>
+      <th>Sidereal longitude</th>
+      <th>Sign &amp; degree</th>
+      <th>Nakshatra (pada)</th>
+      <th>Motion</th>
+    </tr></thead><tbody><tr>
+      <td><strong>Sun</strong></td>
+      <td class="deg">271.059815°</td>
+      <td>Capricorn 1° 03' 35.33"</td>
+      <td>Uttara Ashadha (2)</td>
+      <td class="D">Direct (D)</td>
+    </tr><tr>
+      <td><strong>Moon</strong></td>
+      <td class="deg">140.123638°</td>
+      <td>Leo 20° 07' 25.10"</td>
+      <td>Purva Phalguni (3)</td>
+      <td class="D">Direct (D)</td>
+    </tr><tr>
+      <td><strong>Mars</strong></td>
+      <td class="deg">235.980019°</td>
+      <td>Scorpio 25° 58' 48.07"</td>
+      <td>Jyeshtha (3)</td>
+      <td class="D">Direct (D)</td>
+    </tr><tr>
+      <td><strong>Mercury</strong></td>
+      <td class="deg">257.839727°</td>
+      <td>Sagittarius 17° 50' 23.02"</td>
+      <td>Purva Ashadha (2)</td>
+      <td class="R">Retrograde (R)</td>
+    </tr><tr>
+      <td><strong>Jupiter</strong></td>
+      <td class="deg">69.678820°</td>
+      <td>Gemini 9° 40' 43.75"</td>
+      <td>Ardra (1)</td>
+      <td class="R">Retrograde (R)</td>
+    </tr><tr>
+      <td><strong>Venus</strong></td>
+      <td class="deg">277.136844°</td>
+      <td>Capricorn 7° 08' 12.64"</td>
+      <td>Uttara Ashadha (4)</td>
+      <td class="R">Retrograde (R)</td>
+    </tr><tr>
+      <td><strong>Saturn</strong></td>
+      <td class="deg">263.558690°</td>
+      <td>Sagittarius 23° 33' 31.28"</td>
+      <td>Purva Ashadha (4)</td>
+      <td class="D">Direct (D)</td>
+    </tr><tr>
+      <td><strong>Rahu</strong></td>
+      <td class="deg">293.987837°</td>
+      <td>Capricorn 23° 59' 16.21"</td>
+      <td>Dhanishta (1)</td>
+      <td class="R">Retrograde (R)</td>
+    </tr><tr>
+      <td><strong>Ketu</strong></td>
+      <td class="deg">113.987837°</td>
+      <td>Cancer 23° 59' 16.21"</td>
+      <td>Ashlesha (3)</td>
+      <td class="R">Retrograde (R)</td>
+    </tr></tbody></table></div></div>
+
+<div class="panel">
+  <strong>How to verify these numbers</strong>
+  <p class="meta">
+    Cross-check the sidereal longitudes against any of these reliable Vedic sources, using the same birth data
+    (15 Jan 1990, 10:30 IST, Chennai, Lahiri ayanamsa, Mean node):
+  </p>
+  <ul class="meta">
+    <li>Drik Panchang — <code>drikpanchang.com</code> (planetary positions, sidereal)</li>
+    <li>Jagannatha Hora (free desktop Vedic software — reference standard for many)</li>
+    <li>AstroSage Kundli — <code>astrosage.com</code></li>
+    <li>Astrodienst <code>astro.com</code> with "Sidereal / Lahiri" extended chart selection</li>
+  </ul>
+  <p class="meta">
+    Acceptance criterion: each planet's longitude should match the reference to within <strong>~0.02°</strong>
+    (≈ 1 arc-minute). Moshier theoretical precision is ~1 arc-second for inner planets; differences of a few arc-seconds
+    are normal and harmless for Vedic charts (signs, nakshatras, padas, dasha periods all remain correct).
+  </p>
+</div>
+
+<script type="module">
+  const statusEl = document.getElementById('status');
+  const outEl    = document.getElementById('output');
+
+  function setStatus(msg, cls) {
+    statusEl.className = 'status ' + (cls || 'info');
+    statusEl.textContent = msg;
+  }
+
+  function fmtDMS(deg) {
+    // returns "dd°mm'ss\"" within sign  — also returns sign info
+    const d = Math.floor(deg);
+    const mFloat = (deg - d) * 60;
+    const m = Math.floor(mFloat);
+    const s = ((mFloat - m) * 60).toFixed(2);
+    return `${d}° ${String(m).padStart(2,'0')}' ${String(s).padStart(5,'0')}"`;
+  }
+
+  const SIGNS = [
+    'Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+    'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'
+  ];
+  const NAKSHATRAS = [
+    'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
+    'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni',
+    'Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+    'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha',
+    'Purva Bhadrapada','Uttara Bhadrapada','Revati'
+  ];
+
+  function signInfo(lon) {
+    lon = ((lon % 360) + 360) % 360;
+    const signIdx = Math.floor(lon / 30);
+    const degInSign = lon - signIdx * 30;
+    const nakIdx = Math.floor(lon / (360 / 27));
+    const pada   = Math.floor((lon % (360 / 27)) / (360 / 108)) + 1;
+    return {
+      sign: SIGNS[signIdx],
+      degInSign,
+      nakshatra: NAKSHATRAS[nakIdx],
+      pada
+    };
+  }
+
+  let SwissEph;
+  try {
+    ({ default: SwissEph } = await import(
+      'https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js'
+    ));
+  } catch (e) {
+    setStatus('Failed to load swisseph-wasm module from CDN: ' + e.message +
+      '  — If you opened this file via file://, please serve it over http instead (see "Known limitations" below).',
+      'err');
+    appendKnownLimitations();
+    throw e;
+  }
+
+  setStatus('Module loaded. Initializing WebAssembly…', 'info');
+
+  const swe = new SwissEph();
+  try {
+    await swe.initSwissEph();
+  } catch (e) {
+    setStatus('Swiss Ephemeris WASM failed to initialize: ' + e.message, 'err');
+    appendKnownLimitations();
+    throw e;
+  }
+
+  setStatus('Swiss Ephemeris ready — version ' + (swe.version ? swe.version() : 'n/a') +
+    '. Computing positions…', 'info');
+
+  // ---- Birth data ----
+  // 15 January 1990, 10:30 IST (UTC+5:30)  -> 05:00 UTC
+  // Julian Day (UT) computed by swisseph from UTC components
+  const utc = swe.utc_to_jd(1990, 1, 15, 5, 0, 0, swe.SE_GREG_CAL);
+  const jdUT = utc.julianDayUT;
+
+  // Sidereal mode: Lahiri (Chitrapaksha)
+  swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
+
+  // Flags: Moshier (no data files needed) + Sidereal + Speed (for retrograde)
+  const FLAGS = swe.SEFLG_MOSEPH | swe.SEFLG_SIDEREAL | swe.SEFLG_SPEED;
+
+  const ayan = swe.get_ayanamsa_ut(jdUT);
+
+  const planets = [
+    { key: 'Sun',     id: swe.SE_SUN,       node: false },
+    { key: 'Moon',    id: swe.SE_MOON,      node: false },
+    { key: 'Mars',    id: swe.SE_MARS,      node: false },
+    { key: 'Mercury', id: swe.SE_MERCURY,   node: false },
+    { key: 'Jupiter', id: swe.SE_JUPITER,   node: false },
+    { key: 'Venus',   id: swe.SE_VENUS,     node: false },
+    { key: 'Saturn',  id: swe.SE_SATURN,    node: false },
+    { key: 'Rahu',    id: swe.SE_MEAN_NODE, node: true  },
+    // Ketu is computed from Rahu (Rahu + 180°)
+  ];
+
+  const rows = [];
+
+  for (const p of planets) {
+    const r = swe.calc_ut(jdUT, p.id, FLAGS);
+    // r is [lon, lat, dist, lonSpeed, latSpeed, distSpeed]
+    const lon = r[0];
+    const speed = r[3];
+    const retro = p.key === 'Rahu' ? true : speed < 0;
+    rows.push({
+      name: p.key,
+      lon,
+      speed,
+      retro,
+      ...signInfo(lon)
+    });
+  }
+
+  // Ketu = Rahu + 180°
+  const rahu = rows.find(r => r.name === 'Rahu');
+  const ketuLon = ((rahu.lon + 180) % 360 + 360) % 360;
+  rows.push({
+    name: 'Ketu',
+    lon: ketuLon,
+    speed: -rahu.speed, // Ketu retrograde always; speed equal-magnitude opposite-sign
+    retro: true,
+    ...signInfo(ketuLon)
+  });
+
+  // ---- Render ----
+  let html = '';
+  html += `<div class="panel"><strong>Computed sidereal positions</strong>`;
+  html += `<div class="meta">Julian Day (UT): <code>${jdUT.toFixed(8)}</code>
+            &nbsp;|&nbsp; Lahiri ayanamsa at JD: <code>${ayan.toFixed(6)}°</code>
+            (${fmtDMS(ayan)})</div>`;
+  html += `<table>
+    <thead><tr>
+      <th>Planet</th>
+      <th>Sidereal longitude</th>
+      <th>Sign &amp; degree</th>
+      <th>Nakshatra (pada)</th>
+      <th>Motion</th>
+    </tr></thead><tbody>`;
+  for (const r of rows) {
+    html += `<tr>
+      <td><strong>${r.name}</strong></td>
+      <td class="deg">${r.lon.toFixed(6)}°</td>
+      <td>${r.sign} ${fmtDMS(r.degInSign)}</td>
+      <td>${r.nakshatra} (${r.pada})</td>
+      <td class="${r.retro ? 'R' : 'D'}">${r.retro ? 'Retrograde (R)' : 'Direct (D)'}</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div>`;
+
+  outEl.innerHTML = html;
+  setStatus('Calculation complete. Cross-check the longitudes below against a known Vedic source.', 'ok');
+
+  appendKnownLimitations();
+
+  function appendKnownLimitations() {
+    const div = document.createElement('div');
+    div.className = 'panel';
+    div.innerHTML = `
+      <strong>Known limitations &amp; honest disclosures</strong>
+      <ul class="meta">
+        <li><strong>Moshier vs JPL/Swiss Ephemeris precision:</strong> This test uses
+          <code>SEFLG_MOSEPH</code> — the analytical Moshier ephemeris built into the WASM.
+          Stated precision is ~1 arc-second (much better than 0.001°). For Vedic chart purposes
+          (signs, nakshatras, padas, vimshottari dasha boundaries, divisional charts up to D-60)
+          this is fully sufficient. For sub-arc-second JPL-grade precision you would need to load
+          the Swiss Ephemeris <code>.se1</code> files and switch the flag to <code>SEFLG_SWIEPH</code>;
+          those files are not bundled in the WASM.</li>
+
+        <li><strong>file:// vs http:// loading:</strong> The library is loaded as an
+          ES module from the jsDelivr CDN. Browsers (especially Chrome) often refuse to load
+          ES modules and WebAssembly from a page opened via <code>file://</code>. If this page
+          shows an import/CORS error, serve it locally first, e.g. from this folder run
+          <code>python -m http.server 8000</code> and open
+          <code>http://localhost:8000/ephemeris-test.html</code>.</li>
+
+        <li><strong>CDN dependency:</strong> Loading from
+          <code>cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/…</code> means an internet connection
+          and CDN availability are required, and pinning to <code>@main</code> is mutable. For
+          production, pin to a specific commit hash or vendor the
+          <code>src/swisseph.js</code>, <code>wasm/swisseph.js</code>, <code>wasm/swisseph.wasm</code>
+          and <code>wasm/swisseph.data</code> files into your own project.</li>
+
+        <li><strong>Rahu/Ketu convention:</strong> This uses the <em>Mean</em> node
+          (<code>SE_MEAN_NODE</code>) — the most common Vedic convention (matches Drik Panchang,
+          Jagannatha Hora "mean" mode, AstroSage default). If your reference source uses the
+          True node, switch to <code>SE_TRUE_NODE</code>; positions will differ by up to ~1.5°.</li>
+
+        <li><strong>Ketu retrograde flag:</strong> Vedic convention treats both nodes as
+          permanently retrograde. The displayed "R" reflects that convention rather than the
+          raw numeric speed sign for Ketu.</li>
+
+        <li><strong>License:</strong> Swiss Ephemeris is dual-licensed (GPL or commercial from
+          Astrodienst). If your downstream Vedic-chart application is closed-source/commercial,
+          you will need a Swiss Ephemeris commercial licence regardless of the wrapper.</li>
+
+        <li><strong>Browser support:</strong> Requires WebAssembly + ES modules +
+          top-level await — Chrome 89+, Firefox 89+, Safari 15+, Edge 89+. Older browsers
+          will fail at the dynamic <code>import()</code> step.</li>
+      </ul>`;
+    document.body.appendChild(div);
+  }
+</script>
+
+
+
+<div class="panel">
+      <strong>Known limitations &amp; honest disclosures</strong>
+      <ul class="meta">
+        <li><strong>Moshier vs JPL/Swiss Ephemeris precision:</strong> This test uses
+          <code>SEFLG_MOSEPH</code> — the analytical Moshier ephemeris built into the WASM.
+          Stated precision is ~1 arc-second (much better than 0.001°). For Vedic chart purposes
+          (signs, nakshatras, padas, vimshottari dasha boundaries, divisional charts up to D-60)
+          this is fully sufficient. For sub-arc-second JPL-grade precision you would need to load
+          the Swiss Ephemeris <code>.se1</code> files and switch the flag to <code>SEFLG_SWIEPH</code>;
+          those files are not bundled in the WASM.</li>
+
+        <li><strong>file:// vs http:// loading:</strong> The library is loaded as an
+          ES module from the jsDelivr CDN. Browsers (especially Chrome) often refuse to load
+          ES modules and WebAssembly from a page opened via <code>file://</code>. If this page
+          shows an import/CORS error, serve it locally first, e.g. from this folder run
+          <code>python -m http.server 8000</code> and open
+          <code>http://localhost:8000/ephemeris-test.html</code>.</li>
+
+        <li><strong>CDN dependency:</strong> Loading from
+          <code>cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/…</code> means an internet connection
+          and CDN availability are required, and pinning to <code>@main</code> is mutable. For
+          production, pin to a specific commit hash or vendor the
+          <code>src/swisseph.js</code>, <code>wasm/swisseph.js</code>, <code>wasm/swisseph.wasm</code>
+          and <code>wasm/swisseph.data</code> files into your own project.</li>
+
+        <li><strong>Rahu/Ketu convention:</strong> This uses the <em>Mean</em> node
+          (<code>SE_MEAN_NODE</code>) — the most common Vedic convention (matches Drik Panchang,
+          Jagannatha Hora "mean" mode, AstroSage default). If your reference source uses the
+          True node, switch to <code>SE_TRUE_NODE</code>; positions will differ by up to ~1.5°.</li>
+
+        <li><strong>Ketu retrograde flag:</strong> Vedic convention treats both nodes as
+          permanently retrograde. The displayed "R" reflects that convention rather than the
+          raw numeric speed sign for Ketu.</li>
+
+        <li><strong>License:</strong> Swiss Ephemeris is dual-licensed (GPL or commercial from
+          Astrodienst). If your downstream Vedic-chart application is closed-source/commercial,
+          you will need a Swiss Ephemeris commercial licence regardless of the wrapper.</li>
+
+        <li><strong>Browser support:</strong> Requires WebAssembly + ES modules +
+          top-level await — Chrome 89+, Firefox 89+, Safari 15+, Edge 89+. Older browsers
+          will fail at the dynamic <code>import()</code> step.</li>
+      </ul></div></body></html>

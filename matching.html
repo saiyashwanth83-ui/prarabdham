@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Kundali compatibility matching — Ashta Koota and Dasa Porutham."/>
+  <title>Kundali Matching — Prarabdham</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .matching-page { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    .matching-page h1 { color: var(--gold); text-align: center; margin-bottom: .4rem; }
+    .matching-intro { text-align: center; color: var(--text-3); font-size: .92rem; margin-bottom: 2.5rem; }
+    .matching-intro a { color: var(--gold-dim); }
+
+    .persons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .person-form { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.5rem; }
+    .person-form h3 { font-size: .82rem; text-transform: uppercase; letter-spacing: .1em; color: var(--gold-dim); margin-bottom: 1.2rem; font-family: var(--font-mono); }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--text-3); margin-bottom: .4rem; font-family: var(--font-mono); }
+    .form-group input, .form-group select { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r); padding: .65rem .9rem; color: var(--text); font-family: var(--font-body); font-size: .95rem; -webkit-appearance: none; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold-dim); }
+    .form-group input::placeholder { color: var(--text-3); }
+    .place-results { background: var(--bg-3); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r) var(--r); max-height: 180px; overflow-y: auto; display: none; }
+    .place-results.open { display: block; }
+    .place-result-item { padding: .55rem .9rem; font-size: .85rem; color: var(--text-2); cursor: pointer; border-bottom: 1px solid var(--border); }
+    .place-result-item:hover { background: var(--bg-2); }
+    .place-confirmed { font-size: .72rem; color: var(--pass); margin-top: .3rem; font-family: var(--font-mono); }
+    .noon-note { font-size: .75rem; color: var(--warn); margin-top: .3rem; font-style: italic; display: none; }
+    .noon-note.show { display: block; }
+    .checkbox-row { display: flex; align-items: center; gap: .5rem; font-size: .85rem; color: var(--text-2); cursor: pointer; }
+    .checkbox-row input { width: auto; accent-color: var(--gold); }
+
+    .match-submit { text-align: center; margin-top: .5rem; }
+    .match-submit .btn { padding: .9rem 3rem; font-size: 1.05rem; }
+
+    .form-error { background: rgba(192,88,88,.1); border: 1px solid var(--fail); border-radius: var(--r); padding: .65rem 1rem; font-size: .85rem; color: #e88888; margin-bottom: 1rem; display: none; }
+    .form-error.show { display: block; }
+
+    .loading-overlay { text-align: center; padding: 4rem; display: none; }
+    .loading-overlay.show { display: block; }
+    .spinner { display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; margin-right: .5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
+    #match-output { display: none; }
+    .out-section { margin-bottom: 2.5rem; }
+    .out-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .14em; color: var(--gold-dim); padding-bottom: .4rem; border-bottom: 1px solid var(--border); margin-bottom: 1.2rem; font-family: var(--font-mono); }
+    .score-strip { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .score-chip { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: .5rem 1rem; text-align: center; }
+    .score-chip .sc-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text-3); font-family: var(--font-mono); display: block; margin-bottom: .2rem; }
+    .score-chip .sc-value { font-size: 1.25rem; color: var(--gold); }
+    .score-chip.good .sc-value { color: var(--pass); }
+    .score-chip.warn .sc-value { color: var(--warn); }
+    .score-chip.bad  .sc-value { color: var(--fail); }
+
+    table.mf { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    table.mf th { padding: .38rem .7rem; font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); border-bottom: 1px solid var(--border); text-align: left; font-family: var(--font-mono); }
+    table.mf td { padding: .42rem .7rem; border-bottom: 1px solid rgba(42,42,58,.4); font-family: var(--font-mono); font-size: .78rem; }
+    table.mf td:first-child { font-family: var(--font-body); color: var(--text); font-size: .82rem; }
+    .pc { color: var(--pass); } .fc { color: var(--fail); } .wc { color: var(--warn); }
+    .crit-row td { background: rgba(224,92,92,.05); }
+    .dosha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .dosha-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.1rem; }
+    .dosha-card.present { border-left: 3px solid var(--warn); }
+    .dosha-card.absent  { border-left: 3px solid var(--pass); }
+    .dosha-card.cancelled { border-left: 3px solid var(--gold-dim); }
+    .dosha-title { font-size: .88rem; color: var(--text); margin-bottom: .35rem; }
+    .dosha-note  { font-size: .78rem; color: var(--text-2); font-style: italic; line-height: 1.65; }
+    .closing-note { background: var(--bg-2); border: 1px solid var(--border); border-top: 2px solid var(--gold-dim); border-radius: var(--r-lg); padding: 1.25rem 1.4rem; font-size: .85rem; line-height: 1.8; color: var(--text-3); font-style: italic; margin-top: 2rem; }
+    .closing-note-label { font-style: normal; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--gold-dim); font-family: var(--font-mono); margin-bottom: .5rem; display: block; }
+    .output-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      .persons-grid { grid-template-columns: 1fr; }
+      .dosha-grid  { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo-small">prar<span>a</span>bdham</a>
+    <nav>
+      <a href="chart.html">Chart</a>
+      <a href="kundali-matching.html">Matching</a>
+      <a href="what-is-astrology.html">What is Astrology</a>
+      <span class="nav-lang">EN</span>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="matching-page">
+
+  <h1>Kundali Matching</h1>
+  <p class="matching-intro">Enter birth details for both persons. <a href="kundali-matching.html">Read our honest framing of matching</a> before drawing conclusions from any score.</p>
+
+  <div id="form-error" class="form-error"></div>
+
+  <div id="match-form">
+    <div class="persons-grid">
+      <!-- Person 1 -->
+      <div class="person-form">
+        <h3>Person 1</h3>
+        <div class="form-group">
+          <label>Name (optional)</label>
+          <input type="text" id="p1-name" placeholder="Name"/>
+        </div>
+        <div class="form-group">
+          <label>Date of birth</label>
+          <input type="date" id="p1-date"/>
+        </div>
+        <div class="form-group">
+          <label>Time of birth</label>
+          <input type="time" id="p1-time"/>
+          <label class="checkbox-row" style="margin-top:.4rem">
+            <input type="checkbox" id="p1-notime"/> Unknown time
+          </label>
+          <p class="noon-note" id="p1-noon">12:00 noon will be used.</p>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label>Place of birth</label>
+          <input type="text" id="p1-place" placeholder="City, country…" autocomplete="off"/>
+          <div class="place-results" id="p1-results"></div>
+          <p class="place-confirmed" id="p1-confirmed"></p>
+        </div>
+      </div>
+      <!-- Person 2 -->
+      <div class="person-form">
+        <h3>Person 2</h3>
+        <div class="form-group">
+          <label>Name (optional)</label>
+          <input type="text" id="p2-name" placeholder="Name"/>
+        </div>
+        <div class="form-group">
+          <label>Date of birth</label>
+          <input type="date" id="p2-date"/>
+        </div>
+        <div class="form-group">
+          <label>Time of birth</label>
+          <input type="time" id="p2-time"/>
+          <label class="checkbox-row" style="margin-top:.4rem">
+            <input type="checkbox" id="p2-notime"/> Unknown time
+          </label>
+          <p class="noon-note" id="p2-noon">12:00 noon will be used.</p>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label>Place of birth</label>
+          <input type="text" id="p2-place" placeholder="City, country…" autocomplete="off"/>
+          <div class="place-results" id="p2-results"></div>
+          <p class="place-confirmed" id="p2-confirmed"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="match-submit">
+      <button class="btn btn-primary" id="match-btn">Check Compatibility</button>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="match-loading">
+    <div class="spinner"></div>
+    <p style="color:var(--text-3);font-size:.9rem;font-style:italic" id="match-loading-msg">Calculating birth charts…</p>
+  </div>
+
+  <div id="match-output">
+
+    <div class="out-section">
+      <div class="out-title">Summary</div>
+      <div class="score-strip" id="score-strip"></div>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">Ashta Koota — North Indian System (out of 36)</div>
+      <table class="mf" id="ashta-table">
+        <thead><tr><th>Factor</th><th>Score</th><th>Max</th><th>Notes</th></tr></thead>
+        <tbody id="ashta-body"></tbody>
+      </table>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">Dasa Porutham — South Indian System (out of 10)</div>
+      <p style="font-size:.75rem;color:var(--text-3);margin-bottom:.75rem">Convention: Person 1 = Girl, Person 2 = Boy. Rajju ⚠ and Vedha ⚠ are more serious than other factors regardless of overall count.</p>
+      <table class="mf" id="dasa-table">
+        <thead><tr><th>Porutham</th><th>Status</th><th>Notes</th></tr></thead>
+        <tbody id="dasa-body"></tbody>
+      </table>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">Dosha Assessment</div>
+      <div class="dosha-grid" id="dosha-grid"></div>
+    </div>
+
+    <div class="closing-note">
+      <span class="closing-note-label">A note on this reading</span>
+      This reading is a framework for honest reflection — not a verdict about your life or a fixed description of who you are. The chart shows the terrain your consciousness is navigating in this life. How you navigate it is always your own. For personalised interpretation consult a qualified Jyotish practitioner. For specific remedies consult an experienced Pandit. For sadhana begin with the basic practices in the Sadhana Path section of this site.
+    </div>
+
+    <div class="output-actions">
+      <button class="btn btn-ghost btn-sm" id="match-restart">Start over</button>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>Made with purpose, free forever.</p>
+    <p style="font-size:.78rem;color:#C9A84C;margin-top:.3rem;font-family:var(--font-mono)">7474YASH</p>
+    <div class="footer-links">
+      <a href="chart.html">Know Your Chart</a>
+      <a href="kundali-matching.html">Kundali Matching</a>
+      <a href="what-is-astrology.html">What is Astrology</a>
+      <a href="why-astrology.html">Why Astrology</a>
+      <a href="how-it-helps.html">How It Helps</a>
+      <a href="about.html">About</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+import { getCoordinates, getTimezone, getJulianDay, getLagna, getPlanets } from './js/calculations/core.js';
+import { getFullMatchingReport, NAKSHATRA_NAMES } from './js/calculations/matching.js';
+
+const $ = id => document.getElementById(id);
+const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+  'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const NAK_SPAN = 360/27;
+
+// Place search
+function setupPlace(inputId, resultsId, confirmedId) {
+  let sel = null, timer = null;
+  const inp = $(inputId), res = $(resultsId), conf = $(confirmedId);
+  inp.addEventListener('input', () => {
+    sel = null; conf.textContent = '';
+    clearTimeout(timer);
+    if (inp.value.trim().length < 3) { res.classList.remove('open'); return; }
+    timer = setTimeout(async () => {
+      try {
+        const data = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(inp.value.trim())}&format=json&limit=5`, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+        res.innerHTML = '';
+        if (!data.length) { res.innerHTML='<div class="place-result-item" style="color:var(--text-3)">No results — try a different spelling.</div>'; }
+        data.forEach(p => {
+          const div = document.createElement('div');
+          div.className='place-result-item';
+          div.textContent = p.display_name;
+          div.onclick = () => { sel={name:p.display_name,latitude:+p.lat,longitude:+p.lon}; inp.value=p.display_name; conf.textContent='✓ '+p.display_name; res.classList.remove('open'); };
+          res.appendChild(div);
+        });
+        res.classList.add('open');
+      } catch {}
+    }, 400);
+  });
+  document.addEventListener('click', e => { if(!e.target.closest('#'+inputId)&&!e.target.closest('#'+resultsId)) res.classList.remove('open'); });
+  return () => sel;
+}
+
+const getP1Place = setupPlace('p1-place','p1-results','p1-confirmed');
+const getP2Place = setupPlace('p2-place','p2-results','p2-confirmed');
+
+// No-time checkboxes
+['1','2'].forEach(n => {
+  $(`p${n}-notime`).addEventListener('change', e => {
+    $(`p${n}-time`).disabled = e.target.checked;
+    if(e.target.checked) { $(`p${n}-time`).value='12:00'; $(`p${n}-noon`).classList.add('show'); }
+    else $(`p${n}-noon`).classList.remove('show');
+  });
+});
+
+function showErr(msg) { const el=$('form-error'); el.textContent=msg; el.classList.add('show'); }
+function clearErr() { $('form-error').classList.remove('show'); }
+
+async function calcChart(dateStr, timeStr, place) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const [h,min] = timeStr.split(':').map(Number);
+  let tz;
+  try { tz = (await getTimezone(place.latitude, place.longitude)).timezone; }
+  catch { tz = `Etc/GMT${place.longitude>=0?'-':'+'}${Math.round(Math.abs(place.longitude)/15)}`; }
+  const jdr = await getJulianDay(y,m,d,h,min,tz);
+  const [planets, lagna] = await Promise.all([
+    getPlanets(jdr.julianDay,'lahiri'),
+    getLagna(jdr.julianDay, place.latitude, place.longitude,'lahiri'),
+  ]);
+  const moon = planets.Moon;
+  const lon = ((moon.longitude%360)+360)%360;
+  const nakIdx  = Math.floor(lon/NAK_SPAN);
+  const rasiIdx = Math.floor(lon/30);
+  const pada    = Math.floor((lon%NAK_SPAN)/(NAK_SPAN/4))+1;
+  const lagnaIdx = SIGNS.indexOf(lagna.sign);
+  const marsSignIdx = SIGNS.indexOf(planets.Mars.sign);
+  const marsHouse = ((marsSignIdx-lagnaIdx+12)%12)+1;
+  return {
+    moon: { nakshatraIndex:nakIdx, rasiIndex:rasiIdx, pada, sign:moon.sign,
+      degrees:moon.degrees, minutes:moon.minutes, nakshatra:NAKSHATRA_NAMES[nakIdx] },
+    marsHouse, marsSign:planets.Mars.sign,
+    marsDignity: planets.Mars.dignity||'', lagnaSign:lagna.sign,
+  };
+}
+
+function sc(v,max) { const p=v/max; return p>=0.7?'good':p>=0.45?'':'bad'; }
+
+async function doMatch() {
+  clearErr();
+  const p1d=$('p1-date').value, p2d=$('p2-date').value;
+  if(!p1d) { showErr('Please enter Person 1 date of birth.'); return; }
+  if(!p2d) { showErr('Please enter Person 2 date of birth.'); return; }
+  const p1t = $('p1-notime').checked?'12:00':($('p1-time').value||'12:00');
+  const p2t = $('p2-notime').checked?'12:00':($('p2-time').value||'12:00');
+  let pl1=getP1Place(), pl2=getP2Place();
+
+  const tryGeo = async (txt) => {
+    const d = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(txt)}&format=json&limit=1`).then(r=>r.json());
+    if(!d.length) throw new Error(`Place not found: ${txt}`);
+    return {name:d[0].display_name,latitude:+d[0].lat,longitude:+d[0].lon};
+  };
+  try {
+    if(!pl1) pl1 = await tryGeo($('p1-place').value.trim());
+    if(!pl2) pl2 = await tryGeo($('p2-place').value.trim());
+  } catch(e) { showErr(e.message); return; }
+
+  $('match-form').style.display='none';
+  $('match-loading').classList.add('show');
+  $('match-loading-msg').textContent='Calculating Person 1 chart…';
+
+  try {
+    const c1 = await calcChart(p1d,p1t,pl1);
+    $('match-loading-msg').textContent='Calculating Person 2 chart…';
+    const c2 = await calcChart(p2d,p2t,pl2);
+    $('match-loading-msg').textContent='Running compatibility analysis…';
+    const report = getFullMatchingReport(c1, c2);
+    renderResults(c1, c2, report, $('p1-name').value||'Person 1', $('p2-name').value||'Person 2');
+  } catch(e) {
+    $('match-loading').classList.remove('show');
+    $('match-form').style.display='block';
+    showErr(`Calculation failed: ${e.message}`);
+  }
+}
+
+function renderResults(c1, c2, report, n1, n2) {
+  const { ashtaKoota:ak, dasaPorutham:dp, mangalDosha:md, nadiDosha:nd } = report;
+
+  // Score strip
+  const aColor = sc(ak.total,36);
+  $('score-strip').innerHTML = `
+    <div class="score-chip ${aColor}"><span class="sc-label">Ashta Koota</span><span class="sc-value">${ak.total} / 36</span></div>
+    <div class="score-chip"><span class="sc-label">Dasa Porutham</span><span class="sc-value">${dp.passCount} / 10</span></div>
+    <div class="score-chip ${nd.doshaPresent?'bad':'good'}"><span class="sc-label">Nadi Dosha</span><span class="sc-value">${nd.doshaPresent?'Present':'Absent'}</span></div>
+    <div class="score-chip ${md.person1.doshaPresent&&!md.person1.cancelled?'warn':''}"><span class="sc-label">Mangal · ${n1}</span><span class="sc-value">${md.person1.doshaPresent?(md.person1.cancelled?'Cancelled':'Present'):'Absent'}</span></div>
+    <div class="score-chip ${md.person2.doshaPresent&&!md.person2.cancelled?'warn':''}"><span class="sc-label">Mangal · ${n2}</span><span class="sc-value">${md.person2.doshaPresent?(md.person2.cancelled?'Cancelled':'Present'):'Absent'}</span></div>`;
+
+  // Ashta Koota table
+  const pct = (s,m) => { const p=s/m; return p>=0.7?'pc':p>=0.4?'wc':'fc'; };
+  $('ashta-body').innerHTML = ak.factors.map(f=>`<tr>
+    <td>${f.name}</td>
+    <td class="${pct(f.scored,f.max)}">${f.scored}</td>
+    <td style="color:var(--text-3)">${f.max}</td>
+    <td style="color:var(--text-2)">${f.explanation}</td>
+  </tr>`).join('') + `<tr style="border-top:2px solid var(--border)">
+    <td><strong>Total</strong></td>
+    <td class="${pct(ak.total,36)}"><strong>${ak.total}</strong></td>
+    <td style="color:var(--text-3)"><strong>36</strong></td>
+    <td style="color:var(--text-3)">≥18 generally acceptable · ≥24 strong · Nadi/Bhakoot doshas outweigh total</td>
+  </tr>`;
+
+  // Dasa Porutham table
+  $('dasa-body').innerHTML = dp.factors.map(f=>`<tr class="${f.isCritical?'crit-row':''}">
+    <td>${f.name}${f.isCritical?' ⚠':''}</td>
+    <td class="${f.ok?'pc':'fc'}">${f.ok?'Pass':'Fail'}</td>
+    <td style="color:var(--text-2)">${f.explanation}</td>
+  </tr>`).join('') + `<tr style="border-top:2px solid var(--border)">
+    <td><strong>Total</strong></td>
+    <td class="${pct(dp.passCount,10)}"><strong>${dp.passCount} / 10</strong></td>
+    <td style="color:var(--text-3)">Rajju and Vedha failures carry more weight than other factors.</td>
+  </tr>`;
+
+  // Dosha cards
+  $('dosha-grid').innerHTML = `
+    <div class="dosha-card ${nd.doshaPresent?'present':'absent'}">
+      <div class="dosha-title">Nadi Dosha</div>
+      <div class="dosha-note">${nd.note}</div>
+    </div>
+    <div class="dosha-card ${md.person1.doshaPresent?(md.person1.cancelled?'cancelled':'present'):'absent'}">
+      <div class="dosha-title">Mangal Dosha — ${n1}</div>
+      <div class="dosha-note">${md.person1.note}</div>
+    </div>
+    <div class="dosha-card ${md.person2.doshaPresent?(md.person2.cancelled?'cancelled':'present'):'absent'}">
+      <div class="dosha-title">Mangal Dosha — ${n2}</div>
+      <div class="dosha-note">${md.person2.note}</div>
+    </div>`;
+
+  $('match-loading').classList.remove('show');
+  $('match-output').style.display='block';
+  $('match-output').scrollIntoView({behavior:'smooth'});
+}
+
+$('match-btn').addEventListener('click', doMatch);
+$('match-restart').addEventListener('click', () => {
+  $('match-output').style.display='none';
+  $('match-form').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body>
+</html>

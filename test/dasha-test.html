@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vimshottari Dasha — Verification Test</title>
+  <style>
+    :root {
+      --bg: #0d0d14;
+      --surface: #16161f;
+      --border: #2a2a3a;
+      --gold: #c9a84c;
+      --gold-dim: #7a6230;
+      --text: #e8e4d9;
+      --text-dim: #8a8677;
+      --pass: #4caf7a;
+      --fail: #e05c5c;
+      --font: 'Georgia', serif;
+      --mono: 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 0 2.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 1.6rem;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+    }
+    header p { color: var(--text-dim); font-size: 0.9rem; }
+
+    .section {
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+    }
+    .section h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold-dim);
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Info cards */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+    }
+    .info-card .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .info-card .value { font-size: 1rem; color: var(--text); margin-top: 0.2rem; }
+    .info-card .value.highlight { color: var(--gold); }
+
+    /* Current dasha big display */
+    .current-dasha {
+      background: var(--surface);
+      border: 1px solid var(--gold-dim);
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    .cd-item .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .cd-item .planet { font-size: 1.4rem; color: var(--gold); }
+    .cd-item .dates  { font-size: 0.78rem; color: var(--text-dim); font-family: var(--mono); margin-top: 0.15rem; }
+    .separator { color: var(--border); font-size: 1.6rem; }
+
+    /* Maha Dasha table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+    }
+    td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+    tr.active td { background: rgba(201, 168, 76, 0.07); }
+    tr.active td:first-child { color: var(--gold); }
+    td:first-child { color: var(--text); font-family: var(--font); }
+
+    /* Verification */
+    .check-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 5px;
+      background: var(--surface);
+    }
+    .check-list li.pass { border-left: 3px solid var(--pass); }
+    .check-list li.fail { border-left: 3px solid var(--fail); }
+    .badge {
+      flex-shrink: 0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .badge.pass { background: var(--pass); color: #000; }
+    .badge.fail { background: var(--fail); color: #fff; }
+
+    /* Antardasha accordion */
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 0.4rem;
+    }
+    summary {
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      font-size: 0.88rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    summary .ad-planet { color: var(--gold); width: 7rem; }
+    summary .ad-dates  { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
+    .ad-body { padding: 0.5rem 1rem 1rem; }
+    .ad-body table td, .ad-body table th { font-size: 0.78rem; }
+
+    #error {
+      max-width: 860px; margin: 0 auto;
+      background: #2a0d0d; border: 1px solid var(--fail);
+      border-radius: 6px; padding: 1rem 1.2rem;
+      color: var(--fail); font-family: var(--mono); font-size: 0.85rem;
+      display: none;
+    }
+    .loader {
+      text-align: center; padding: 3rem; color: var(--text-dim); font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Vimshottari Dasha — Verification Test</h1>
+  <p>Birth: January 15, 1990 · 10:30 AM IST · Chennai, India</p>
+</header>
+
+<div id="error"></div>
+<div class="loader" id="loader">Calculating planetary positions…</div>
+
+<div id="app" style="display:none">
+
+  <div class="section" id="sec-birth">
+    <h2>Birth Data &amp; Moon Position</h2>
+    <div class="info-grid" id="birth-cards"></div>
+  </div>
+
+  <div class="section">
+    <h2>Active Dasha — <span id="today-label"></span></h2>
+    <div class="current-dasha" id="current-dasha"></div>
+  </div>
+
+  <div class="section">
+    <h2>Maha Dasha Sequence</h2>
+    <table id="maha-table">
+      <thead>
+        <tr>
+          <th>Planet</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Duration (yrs)</th>
+        </tr>
+      </thead>
+      <tbody id="maha-body"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Verification Checks <small style="font-size:0.7rem;color:var(--text-dim)">(tolerance ±3 days)</small></h2>
+    <ul class="check-list" id="checks"></ul>
+  </div>
+
+  <div class="section">
+    <h2>Antardashas in Active Maha Dasha</h2>
+    <div id="antardasha-list"></div>
+  </div>
+
+</div>
+
+<script type="module">
+  // ─── imports ────────────────────────────────────────────────────────────────
+  // core.js is assumed to export: getPlanets(julianDay) → { moon: { longitude } … }
+  // and dateToJD(year, month, day) or similar.
+  // Adjust the import path to match your project layout.
+  import * as Core from '../js/calculations/core.js';
+
+  import {
+    getDashaNakshatraLord,
+    getDashaBalance,
+    getMahaDashas,
+    getAntardashas,
+    getPratyantardashas,
+    getCurrentDasha,
+  } from '../js/calculations/dasha.js';
+
+  // ─── Birth data ──────────────────────────────────────────────────────────────
+  // Jan 15 1990, 10:30 AM IST (UTC+5:30) = 05:00 UTC
+  const BIRTH_UTC = new Date(Date.UTC(1990, 0, 15, 5, 0, 0));
+
+  // Julian Day of birth (noon convention — for Swiss Ephemeris pass the actual time)
+  // If core.js exports a dateToJD, use it. Otherwise compute inline.
+  const birthJD = (() => {
+    // 10:30 AM IST = 10.5h − 5.5h = 5.0h UTC → fraction of day = 5/24
+    const y = 1990, m = 1, d = 15;
+    if (typeof Core.dateToJD === 'function') return Core.dateToJD(y, m, d, 5, 0);
+    // fallback: Meeus JDN at 05:00 UTC
+    const mm = m <= 2 ? m + 12 : m;
+    const yy = m <= 2 ? y - 1  : y;
+    const A  = Math.floor(yy / 100);
+    const B  = 2 - A + Math.floor(A / 4);
+    return Math.floor(365.25 * (yy + 4716)) + Math.floor(30.6001 * (mm + 1)) + d + B - 1524.5 + 5/24;
+  })();
+
+  // ─── helpers ─────────────────────────────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+    document.getElementById('loader').style.display = 'none';
+  }
+
+  function card(label, value, highlight = false) {
+    return `<div class="info-card">
+      <div class="label">${label}</div>
+      <div class="value ${highlight ? 'highlight' : ''}">${value}</div>
+    </div>`;
+  }
+
+  /** Parse "Month DD YYYY" → JS Date for diff check */
+  function parseDateStr(s) {
+    return new Date(s);
+  }
+
+  function diffDays(a, b) {
+    return Math.abs((parseDateStr(a) - parseDateStr(b)) / 86400000);
+  }
+
+  function check(label, actual, expected, tolerance = 3) {
+    const diff = diffDays(actual, expected);
+    const ok   = diff <= tolerance;
+    return { label, actual, expected, diff: Math.round(diff), ok };
+  }
+
+  // ─── main ────────────────────────────────────────────────────────────────────
+  async function run() {
+    let planets;
+    try {
+      // core.js may be async (waits for wasm)
+      planets = await Core.getPlanets(birthJD);
+    } catch (e) {
+      showError(`core.js getPlanets failed: ${e.message}. Make sure the Swiss Ephemeris WASM is loaded and the path is correct.`);
+      return;
+    }
+
+    if (!planets?.moon?.longitude && planets?.moon?.longitude !== 0) {
+      showError('core.js did not return moon.longitude. Check getPlanets() return shape.');
+      return;
+    }
+
+    const moonLon = planets.moon.longitude;
+
+    // ── Nakshatra lord & balance ──
+    const lord   = getDashaNakshatraLord(moonLon);
+    const bal    = getDashaBalance(moonLon, BIRTH_UTC);
+    const dashas = getMahaDashas(moonLon, BIRTH_UTC);
+    const today  = new Date();
+    const current = getCurrentDasha(dashas, today);
+
+    // ── Render: Birth Data ──
+    const NAKSHATRA_NAMES = [
+      'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
+      'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni',
+      'Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+      'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha',
+      'Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati',
+    ];
+    const SPAN = 360/27;
+    const nIdx = Math.floor(((moonLon % 360) + 360) % 360 / SPAN);
+    const posInNak = ((moonLon % 360) + 360) % 360 % SPAN;
+    const pada = Math.floor(posInNak / (SPAN / 4)) + 1;
+    const deg  = Math.floor(moonLon);
+    const minF = (moonLon - deg) * 60;
+    const min  = Math.floor(minF);
+    const sec  = Math.round((minF - min) * 60);
+
+    document.getElementById('birth-cards').innerHTML =
+      card('Moon Longitude', `${deg}° ${min}′ ${sec}″`) +
+      card('Nakshatra', `${NAKSHATRA_NAMES[nIdx]}`, false) +
+      card('Pada', pada) +
+      card('Nakshatra Lord', lord, true) +
+      card('Balance at Birth', `${bal.balance.years}y ${bal.balance.months}m ${bal.balance.days}d`) +
+      card('Dasha Start', bal.dashaStartDate);
+
+    // ── Render: Current Dasha ──
+    document.getElementById('today-label').textContent =
+      today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (current) {
+      document.getElementById('current-dasha').innerHTML = `
+        <div class="cd-item">
+          <div class="label">Maha Dasha</div>
+          <div class="planet">${current.mahaDasha.planet}</div>
+          <div class="dates">${current.mahaDasha.startDate} → ${current.mahaDasha.endDate}</div>
+        </div>
+        <div class="separator">›</div>
+        <div class="cd-item">
+          <div class="label">Antardasha</div>
+          <div class="planet">${current.antardasha.planet}</div>
+          <div class="dates">${current.antardasha.startDate} → ${current.antardasha.endDate}</div>
+        </div>
+        <div class="separator">›</div>
+        <div class="cd-item">
+          <div class="label">Pratyantardasha</div>
+          <div class="planet">${current.pratyantardasha?.planet ?? '—'}</div>
+          <div class="dates">${current.pratyantardasha
+            ? current.pratyantardasha.startDate + ' → ' + current.pratyantardasha.endDate
+            : ''}</div>
+        </div>
+      `;
+    } else {
+      document.getElementById('current-dasha').textContent = 'Date out of computed range.';
+    }
+
+    // ── Render: Maha Dasha table ──
+    const tbody = document.getElementById('maha-body');
+    tbody.innerHTML = dashas.map(d => {
+      const isActive = current && d.planet === current.mahaDasha.planet && d.startJD === current.mahaDasha.startJD;
+      return `<tr class="${isActive ? 'active' : ''}">
+        <td>${d.planet}</td>
+        <td>${d.startDate}</td>
+        <td>${d.endDate}</td>
+        <td>${d.durationYears}</td>
+      </tr>`;
+    }).join('');
+
+    // ── Render: Verification checks ──
+    // Known reference values
+    const refs = [
+      { label: 'Venus Dasha start',  planet: 'Venus',   field: 'startDate', expected: 'November 10 1979' },
+      { label: 'Venus Dasha end',    planet: 'Venus',   field: 'endDate',   expected: 'November 10 1999' },
+      { label: 'Sun Dasha start',    planet: 'Sun',     field: 'startDate', expected: 'November 10 1999' },
+      { label: 'Sun Dasha end',      planet: 'Sun',     field: 'endDate',   expected: 'November 10 2005' },
+      { label: 'Moon Dasha start',   planet: 'Moon',    field: 'startDate', expected: 'November 10 2005' },
+    ];
+
+    const checkResults = refs.map(r => {
+      const d = dashas.find(x => x.planet === r.planet);
+      if (!d) return { label: r.label, ok: false, actual: 'not found', expected: r.expected, diff: '—' };
+      return check(r.label, d[r.field], r.expected);
+    });
+
+    document.getElementById('checks').innerHTML = checkResults.map(c => `
+      <li class="${c.ok ? 'pass' : 'fail'}">
+        <span class="badge ${c.ok ? 'pass' : 'fail'}">${c.ok ? 'PASS' : 'FAIL'}</span>
+        <span>${c.label}: <strong>${c.actual}</strong> (expected ${c.expected}${!c.ok ? `, diff ${c.diff}d` : ''})</span>
+      </li>
+    `).join('');
+
+    // ── Render: Antardashas ──
+    if (current) {
+      const ads = getAntardashas(current.mahaDasha);
+      document.getElementById('antardasha-list').innerHTML = ads.map(ad => {
+        const isActiveAD = ad.planet === current.antardasha.planet && ad.startJD === current.antardasha.startJD;
+        const pds = getPratyantardashas(ad);
+        const pdRows = pds.map(pd => {
+          const isActivePD = current.pratyantardasha &&
+            pd.planet === current.pratyantardasha.planet &&
+            pd.startJD === current.pratyantardasha.startJD;
+          return `<tr style="${isActivePD ? 'color:var(--gold)' : ''}">
+            <td>${pd.planet}</td>
+            <td>${pd.startDate}</td>
+            <td>${pd.endDate}</td>
+            <td>${pd.durationDays}</td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <details ${isActiveAD ? 'open' : ''}>
+            <summary>
+              <span class="ad-planet" style="${isActiveAD ? 'color:var(--gold)' : ''}">${isActiveAD ? '▸ ' : ''}${ad.planet}</span>
+              <span class="ad-dates">${ad.startDate} → ${ad.endDate} (${ad.durationDays} days)</span>
+            </summary>
+            <div class="ad-body">
+              <table>
+                <thead><tr><th>Planet</th><th>Start</th><th>End</th><th>Days</th></tr></thead>
+                <tbody>${pdRows}</tbody>
+              </table>
+            </div>
+          </details>`;
+      }).join('');
+    }
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('app').style.display  = 'block';
+  }
+
+  run().catch(e => showError(e.message));
+</script>
+</body>
+</html>

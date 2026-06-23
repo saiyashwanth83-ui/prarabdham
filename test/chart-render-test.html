@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>South Indian Chart — Render Test</title>
+  <style>
+    :root {
+      --bg: #0d0d14; --surface: #16161f; --border: #2a2a3a;
+      --gold: #c9a84c; --text: #e8e4d9; --text-dim: #8a8677;
+      --font: 'Georgia', serif; --mono: 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 2rem 1rem; }
+
+    header { text-align: center; padding: 2rem 0 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+    header h1 { font-size: 1.6rem; color: var(--gold); letter-spacing: .04em; margin-bottom: .4rem; }
+    header p { color: var(--text-dim); font-size: .9rem; }
+
+    .wrap { max-width: 1000px; margin: 0 auto; }
+    .section { margin-bottom: 3rem; }
+    .section h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .12em; color: var(--gold); margin-bottom: 1.2rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+
+    /* Side-by-side chart row */
+    .chart-row { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-bottom: 2rem; }
+    .chart-wrap { display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+    .chart-label { font-size: .78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* Reference table */
+    .ref-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .ref-table th { padding: .4rem .7rem; font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-dim); border-bottom: 1px solid var(--border); text-align: left; font-family: var(--mono); }
+    .ref-table td { padding: .4rem .7rem; border-bottom: 1px solid rgba(42,42,58,.5); font-family: var(--mono); font-size: .8rem; }
+    .ref-table td:first-child { color: var(--text); font-family: var(--font); }
+    .retro { color: #c9a84c; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+    /* All charts */
+    #all-charts { margin-bottom: 2rem; }
+
+    @media (max-width: 520px) {
+      .chart-row { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>South Indian Chart Renderer</h1>
+  <p>Birth: January 15, 1990 · 10:30 AM IST · Chennai, India</p>
+</header>
+
+<div class="wrap">
+
+  <!-- D1 side by side: light & dark -->
+  <div class="section">
+    <h2>D1 Rasi — Light &amp; Dark Theme</h2>
+    <div class="chart-row">
+      <div class="chart-wrap">
+        <div class="chart-label">Light Theme</div>
+        <div id="d1-light"></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-label">Dark Theme</div>
+        <div id="d1-dark"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="ref-table">
+        <thead><tr><th>Planet</th><th>Sign</th><th>Position</th><th>Notes</th></tr></thead>
+        <tbody id="d1-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- D9 Navamsa -->
+  <div class="section">
+    <h2>D9 Navamsa — Verified vs Drik Panchang</h2>
+    <div class="chart-row">
+      <div class="chart-wrap">
+        <div class="chart-label">Dark Theme</div>
+        <div id="d9-dark"></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-label">Light Theme</div>
+        <div id="d9-light"></div>
+      </div>
+    </div>
+    <div class="card">
+      <table class="ref-table">
+        <thead><tr><th>Planet</th><th>Sign</th><th>Position</th><th>Notes</th></tr></thead>
+        <tbody id="d9-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- All 16 charts -->
+  <div class="section">
+    <h2>All 16 Varga Charts</h2>
+    <div id="all-charts"></div>
+  </div>
+
+</div>
+
+<script type="module">
+import { renderChart, renderAllCharts } from '../js/rendering/southindian.js';
+
+// ── Verified D1 data ──
+const D1_PLANETS = {
+  Sun:     { sign: 'Capricorn',   degrees: 1,  minutes: 3,  isRetrograde: false },
+  Moon:    { sign: 'Leo',         degrees: 20, minutes: 7,  isRetrograde: false },
+  Mars:    { sign: 'Scorpio',     degrees: 25, minutes: 58, isRetrograde: false },
+  Mercury: { sign: 'Sagittarius', degrees: 17, minutes: 50, isRetrograde: true  },
+  Jupiter: { sign: 'Gemini',      degrees: 9,  minutes: 40, isRetrograde: true  },
+  Venus:   { sign: 'Capricorn',   degrees: 7,  minutes: 8,  isRetrograde: true  },
+  Saturn:  { sign: 'Sagittarius', degrees: 23, minutes: 33, isRetrograde: false },
+  Rahu:    { sign: 'Capricorn',   degrees: 23, minutes: 59, isRetrograde: false },
+  Ketu:    { sign: 'Cancer',      degrees: 23, minutes: 59, isRetrograde: false },
+};
+const D1_LAGNA = { sign: 'Pisces', degrees: 5, minutes: 52 };
+
+// ── Verified D9 data (Drik Panchang) ──
+const D9_PLANETS = {
+  Sun:     { sign: 'Capricorn',   degrees: 9,  minutes: 30, isRetrograde: false },
+  Moon:    { sign: 'Libra',       degrees: 1,  minutes: 5,  isRetrograde: false },
+  Mars:    { sign: 'Aquarius',    degrees: 23, minutes: 47, isRetrograde: false },
+  Mercury: { sign: 'Virgo',       degrees: 10, minutes: 31, isRetrograde: false },
+  Jupiter: { sign: 'Sagittarius', degrees: 27, minutes: 4,  isRetrograde: false },
+  Venus:   { sign: 'Pisces',      degrees: 4,  minutes: 12, isRetrograde: false },
+  Saturn:  { sign: 'Libra',       degrees: 13, minutes: 35, isRetrograde: false },
+  Rahu:    { sign: 'Scorpio',     degrees: 35, minutes: 55, isRetrograde: false },
+  Ketu:    { sign: 'Taurus',      degrees: 35, minutes: 55, isRetrograde: false },
+};
+const D9_LAGNA = { sign: 'Leo', degrees: 25, minutes: 14 };
+
+// ── All charts for renderAllCharts ──
+const ALL_CHARTS = {
+  D1:  { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D1 — Rasi' },
+  D9:  { planets: D9_PLANETS, lagna: D9_LAGNA, chartName: 'D9 — Navamsa' },
+  // Remaining charts use D1 as placeholder so the grid renders meaningfully
+  D2:  { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D2 — Hora' },
+  D3:  { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D3 — Drekkana' },
+  D4:  { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D4 — Chaturthamsa' },
+  D7:  { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D7 — Saptamsa' },
+  D10: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D10 — Dashamsa' },
+  D12: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D12 — Dwadashamsa' },
+  D16: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D16 — Shodashamsa' },
+  D20: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D20 — Vimshamsa' },
+  D24: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D24 — Chaturvimshamsa' },
+  D27: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D27 — Bhamsa' },
+  D30: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D30 — Trimshamsa' },
+  D40: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D40 — Khavedamsa' },
+  D45: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D45 — Akshavedamsa' },
+  D60: { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D60 — Shashtiamsa' },
+};
+
+// ── Render charts ──
+const SIZE = Math.min(380, window.innerWidth - 40);
+
+renderChart('d1-light', { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D1 — Rasi' },
+  { size: SIZE, theme: 'light', showDegrees: true });
+
+renderChart('d1-dark', { planets: D1_PLANETS, lagna: D1_LAGNA, chartName: 'D1 — Rasi' },
+  { size: SIZE, theme: 'dark', showDegrees: true });
+
+renderChart('d9-dark', { planets: D9_PLANETS, lagna: D9_LAGNA, chartName: 'D9 — Navamsa' },
+  { size: SIZE, theme: 'dark', showDegrees: true });
+
+renderChart('d9-light', { planets: D9_PLANETS, lagna: D9_LAGNA, chartName: 'D9 — Navamsa' },
+  { size: SIZE, theme: 'light', showDegrees: true });
+
+renderAllCharts('all-charts', ALL_CHARTS);
+
+// ── Reference tables ──
+function refRow(name, planet, isLagna = false) {
+  const r = isLagna ? planet : planet;
+  const retro = planet.isRetrograde ? '<span class="retro"> ℞</span>' : '';
+  const pos   = `${planet.degrees}° ${String(planet.minutes).padStart(2,'0')}'`;
+  const note  = isLagna ? 'Ascendant' : (planet.isRetrograde ? 'Retrograde' : '—');
+  return `<tr>
+    <td>${name}</td>
+    <td>${planet.sign}</td>
+    <td>${pos}${retro}</td>
+    <td style="color:var(--text-dim)">${note}</td>
+  </tr>`;
+}
+
+document.getElementById('d1-table').innerHTML =
+  refRow('Lagna', D1_LAGNA, true) +
+  Object.entries(D1_PLANETS).map(([n, p]) => refRow(n, p)).join('');
+
+document.getElementById('d9-table').innerHTML =
+  refRow('Lagna', D9_LAGNA, true) +
+  Object.entries(D9_PLANETS).map(([n, p]) => refRow(n, p)).join('');
+</script>
+</body>
+</html>

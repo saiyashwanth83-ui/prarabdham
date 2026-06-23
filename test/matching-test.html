@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kundali Matching — Test</title>
+  <style>
+    :root {
+      --bg:#0d0d14;--surface:#16161f;--surface2:#1e1a2e;--border:#2a2a3a;
+      --gold:#c9a84c;--gold-dim:#7a6230;
+      --text:#e8e4d9;--text-2:#b8b0cc;--text-3:#7a7090;
+      --pass:#4caf7a;--fail:#e05c5c;--warn:#e0a85c;
+      --font:'Georgia',serif;--mono:'Courier New',monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);padding:2rem 1rem;line-height:1.6;}
+    .wrap{max-width:960px;margin:0 auto;}
+    h1{color:var(--gold);font-size:1.6rem;margin-bottom:.3rem;}
+    h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold-dim);
+      margin:2rem 0 .75rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);}
+    h3{font-size:1rem;color:var(--gold);margin:.75rem 0 .4rem;}
+    p{color:var(--text-2);font-size:.88rem;margin-bottom:.5rem;}
+    .loader{text-align:center;padding:3rem;color:var(--text-3);}
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);
+      border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;
+      margin-right:.5rem;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .err{background:#1c0808;border:1px solid var(--fail);border-radius:6px;padding:1rem;
+      color:#fca5a5;font-family:var(--mono);font-size:.82rem;display:none;}
+
+    /* Birth data cards */
+    .person-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+    .person-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+    .person-card h3{margin-top:0;}
+    .person-card table{width:100%;font-size:.8rem;border-collapse:collapse;}
+    .person-card td{padding:.25rem .4rem;font-family:var(--mono);color:var(--text-2);}
+    .person-card td:first-child{color:var(--text-3);width:45%;}
+
+    /* Score summary */
+    .score-strip{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+    .score-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:.5rem 1rem;text-align:center;}
+    .score-chip .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;
+      color:var(--text-3);font-family:var(--mono);display:block;margin-bottom:.2rem;}
+    .score-chip .value{font-size:1.3rem;color:var(--gold);}
+    .score-chip.warn .value{color:var(--warn);}
+    .score-chip.pass .value{color:var(--pass);}
+
+    /* Factor tables */
+    table.factors{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1rem;}
+    table.factors th{padding:.38rem .65rem;font-size:.68rem;text-transform:uppercase;
+      letter-spacing:.07em;color:var(--text-3);border-bottom:1px solid var(--border);
+      text-align:left;font-family:var(--mono);}
+    table.factors td{padding:.42rem .65rem;border-bottom:1px solid rgba(42,42,58,.5);
+      font-family:var(--mono);font-size:.78rem;}
+    table.factors td:first-child{font-family:var(--font);color:var(--text);font-size:.82rem;}
+    .pass-cell{color:var(--pass);}
+    .fail-cell{color:var(--fail);}
+    .warn-cell{color:var(--warn);}
+    .critical-row td{background:rgba(224,92,92,.06);}
+
+    /* Dosha blocks */
+    .dosha-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+    .dosha-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+    .dosha-card.present{border-left:3px solid var(--warn);}
+    .dosha-card.absent{border-left:3px solid var(--pass);}
+    .dosha-card.cancelled{border-left:3px solid var(--gold-dim);}
+    .dosha-title{font-size:.85rem;color:var(--text);margin-bottom:.4rem;font-family:var(--font);}
+    .dosha-note{font-size:.78rem;color:var(--text-2);font-style:italic;line-height:1.6;}
+
+    /* Drik cross-check note */
+    .crosscheck{background:rgba(201,168,76,.05);border:1px solid var(--gold-dim);
+      border-radius:8px;padding:1rem 1.25rem;margin-top:1.5rem;font-size:.82rem;color:var(--text-2);}
+    .crosscheck strong{color:var(--gold);}
+
+    @media(max-width:600px){
+      .person-grid,.dosha-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kundali Matching — Verification Test</h1>
+  <p style="color:var(--text-3);margin-bottom:1.5rem">Person 1: Jan 15 1990, 10:30 AM IST, Chennai · Person 2: Apr 10 1992, 6:15 AM IST, Madurai</p>
+  <div class="err" id="err"></div>
+  <div class="loader" id="loader"><span class="spinner"></span>Calculating birth charts…</div>
+  <div id="app" style="display:none"></div>
+</div>
+
+<script type="module">
+import { getCoordinates, getTimezone, getJulianDay, getLagna, getPlanets } from '../js/calculations/core.js';
+import { getFullMatchingReport, NAKSHATRA_NAMES, RASI_NAMES, NADI_NAMES, GANA_NAMES, YONI_27, YONI_NAMES } from '../js/calculations/matching.js';
+
+const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+  'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const NAK_SPAN = 360/27;
+
+function showErr(msg){
+  document.getElementById('err').textContent='⚠ '+msg;
+  document.getElementById('err').style.display='block';
+  document.getElementById('loader').style.display='none';
+}
+
+function getMoonData(planets) {
+  const moon = planets.Moon;
+  const lon = ((moon.longitude%360)+360)%360;
+  const nakIdx = Math.floor(lon/NAK_SPAN);
+  const rasiIdx = Math.floor(lon/30);
+  const posInNak = lon % NAK_SPAN;
+  const pada = Math.floor(posInNak/(NAK_SPAN/4))+1;
+  return { nakshatraIndex:nakIdx, rasiIndex:rasiIdx, pada,
+    longitude:lon, sign:moon.sign, degrees:moon.degrees, minutes:moon.minutes,
+    nakshatra: NAKSHATRA_NAMES[nakIdx] };
+}
+
+function getMarsData(planets, lagna) {
+  const mars = planets.Mars;
+  const lagnaSignIdx = SIGNS.indexOf(lagna.sign);
+  const marsSignIdx  = SIGNS.indexOf(mars.sign);
+  const marsHouse = ((marsSignIdx - lagnaSignIdx + 12) % 12) + 1;
+  return { marsHouse, marsSign:mars.sign, marsDignity:mars.dignity||'', lagnaSign:lagna.sign };
+}
+
+async function calcChart(year, month, day, hour, min, place) {
+  const coords = await getCoordinates(place);
+  const tz     = await getTimezone(coords.latitude, coords.longitude);
+  const jdr    = await getJulianDay(year, month, day, hour, min, tz.timezone);
+  const [planets, lagna] = await Promise.all([
+    getPlanets(jdr.julianDay, 'lahiri'),
+    getLagna(jdr.julianDay, coords.latitude, coords.longitude, 'lahiri'),
+  ]);
+  return { planets, lagna, coords };
+}
+
+function scoreColor(s, max) {
+  const pct = s/max;
+  if(pct>=0.75) return 'pass-cell';
+  if(pct>=0.5)  return 'warn-cell';
+  return 'fail-cell';
+}
+
+async function run() {
+  let c1, c2;
+  try {
+    document.getElementById('loader').querySelector('span+span, span').nextSibling &&
+      (document.getElementById('loader').lastChild.textContent='Calculating Person 1…');
+    c1 = await calcChart(1990,1,15,10,30,'Chennai, India');
+    c2 = await calcChart(1992,4,10,6,15,'Madurai, India');
+  } catch(e) { showErr(e.message); return; }
+
+  const moon1 = getMoonData(c1.planets);
+  const moon2 = getMoonData(c2.planets);
+  const mars1 = getMarsData(c1.planets, c1.lagna);
+  const mars2 = getMarsData(c2.planets, c2.lagna);
+
+  const person1 = { moon: moon1, ...mars1 };
+  const person2 = { moon: moon2, ...mars2 };
+
+  const report = getFullMatchingReport(person1, person2);
+  const { ashtaKoota, dasaPorutham, mangalDosha, nadiDosha, summary } = report;
+
+  // ── Render ──
+  const app = document.getElementById('app');
+
+  const pctA = ashtaKoota.total/36;
+  const colorA = pctA>=0.75?'pass':pctA>=0.5?'':'warn';
+
+  app.innerHTML = `
+    <h2>Birth Data</h2>
+    <div class="person-grid">
+      <div class="person-card">
+        <h3>Person 1 — Jan 15 1990 · 10:30 AM · Chennai</h3>
+        <table>
+          <tr><td>Moon</td><td>${moon1.nakshatra} Pada ${moon1.pada} — ${moon1.sign} ${moon1.degrees}°${String(moon1.minutes).padStart(2,'0')}'</td></tr>
+          <tr><td>Rasi</td><td>${moon1.sign}</td></tr>
+          <tr><td>Lagna</td><td>${c1.lagna.sign}</td></tr>
+          <tr><td>Mars</td><td>${c2.planets.Mars?.sign||'—'} · House ${mars1.marsHouse}</td></tr>
+          <tr><td>Nadi</td><td>${NADI_NAMES[1+Math.floor(moon1.nakshatraIndex/9)]||'—'}</td></tr>
+          <tr><td>Gana</td><td>${GANA_NAMES[[1,2,3,3,2,1,1,2,3,3,2,3,2,2,3,2,2,1,1,2,3,3,2,1,1,2,3][moon1.nakshatraIndex]]}</td></tr>
+          <tr><td>Yoni</td><td>${YONI_NAMES[YONI_27[moon1.nakshatraIndex]]}</td></tr>
+        </table>
+      </div>
+      <div class="person-card">
+        <h3>Person 2 — Apr 10 1992 · 6:15 AM · Madurai</h3>
+        <table>
+          <tr><td>Moon</td><td>${moon2.nakshatra} Pada ${moon2.pada} — ${moon2.sign} ${moon2.degrees}°${String(moon2.minutes).padStart(2,'0')}'</td></tr>
+          <tr><td>Rasi</td><td>${moon2.sign}</td></tr>
+          <tr><td>Lagna</td><td>${c2.lagna.sign}</td></tr>
+          <tr><td>Mars</td><td>${c2.planets.Mars?.sign||'—'} · House ${mars2.marsHouse}</td></tr>
+          <tr><td>Nadi</td><td>${NADI_NAMES[1+Math.floor(moon2.nakshatraIndex/9)]||'—'}</td></tr>
+          <tr><td>Gana</td><td>${GANA_NAMES[[1,2,3,3,2,1,1,2,3,3,2,3,2,2,3,2,2,1,1,2,3,3,2,1,1,2,3][moon2.nakshatraIndex]]}</td></tr>
+          <tr><td>Yoni</td><td>${YONI_NAMES[YONI_27[moon2.nakshatraIndex]]}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h2>Score Summary</h2>
+    <div class="score-strip">
+      <div class="score-chip ${colorA}"><span class="label">Ashta Koota Total</span><span class="value">${ashtaKoota.total} / 36</span></div>
+      <div class="score-chip"><span class="label">Dasa Porutham</span><span class="value">${dasaPorutham.passCount} / 10</span></div>
+      <div class="score-chip ${nadiDosha.doshaPresent?'warn':'pass'}"><span class="label">Nadi Dosha</span><span class="value">${nadiDosha.doshaPresent?'Present':'Absent'}</span></div>
+      <div class="score-chip ${(mangalDosha.person1.doshaPresent&&!mangalDosha.person1.cancelled)?'warn':'pass'}"><span class="label">Mangal P1</span><span class="value">${mangalDosha.person1.doshaPresent?(mangalDosha.person1.cancelled?'Cancelled':'Present'):'Absent'}</span></div>
+      <div class="score-chip ${(mangalDosha.person2.doshaPresent&&!mangalDosha.person2.cancelled)?'warn':'pass'}"><span class="label">Mangal P2</span><span class="value">${mangalDosha.person2.doshaPresent?(mangalDosha.person2.cancelled?'Cancelled':'Present'):'Absent'}</span></div>
+    </div>
+
+    <h2>Ashta Koota Breakdown</h2>
+    <table class="factors">
+      <thead><tr><th>Factor</th><th>Score</th><th>Max</th><th>Explanation</th></tr></thead>
+      <tbody>
+        ${ashtaKoota.factors.map(f=>`<tr>
+          <td>${f.name}</td>
+          <td class="${scoreColor(f.scored,f.max)}">${f.scored}</td>
+          <td style="color:var(--text-3)">${f.max}</td>
+          <td style="color:var(--text-2)">${f.explanation}</td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--border)">
+          <td><strong>Total</strong></td>
+          <td class="${scoreColor(ashtaKoota.total,36)}"><strong>${ashtaKoota.total}</strong></td>
+          <td style="color:var(--text-3)"><strong>36</strong></td>
+          <td style="color:var(--text-3)">≥18 generally considered acceptable; ≥24 strong; Nadi and Bhakoot doshas outweigh total score</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Dasa Porutham Breakdown (South Indian)</h2>
+    <p style="color:var(--text-3);font-size:.78rem;margin-bottom:.75rem">Convention: Person 1 = Girl (Ponnu), Person 2 = Boy (Paiyan) — reverse if needed.</p>
+    <table class="factors">
+      <thead><tr><th>Porutham</th><th>Status</th><th>Explanation</th></tr></thead>
+      <tbody>
+        ${dasaPorutham.factors.map(f=>`<tr class="${f.isCritical?'critical-row':''}">
+          <td>${f.name}${f.isCritical?' ⚠':''}</td>
+          <td class="${f.ok?'pass-cell':'fail-cell'}">${f.ok?'Pass':'Fail'}</td>
+          <td style="color:var(--text-2)">${f.explanation}</td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--border)">
+          <td><strong>Total</strong></td>
+          <td class="${scoreColor(dasaPorutham.passCount,10)}"><strong>${dasaPorutham.passCount} / 10</strong></td>
+          <td style="color:var(--text-3)">Rajju and Vedha failures are traditionally more serious than the count alone suggests.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Dosha Assessment</h2>
+    <div class="dosha-grid">
+      <div class="dosha-card ${nadiDosha.doshaPresent?'present':'absent'}">
+        <div class="dosha-title">Nadi Dosha</div>
+        <div class="dosha-note">${nadiDosha.note}</div>
+      </div>
+      <div class="dosha-card ${mangalDosha.person1.doshaPresent?(mangalDosha.person1.cancelled?'cancelled':'present'):'absent'}">
+        <div class="dosha-title">Mangal Dosha — Person 1</div>
+        <div class="dosha-note">${mangalDosha.person1.note}</div>
+      </div>
+      <div class="dosha-card ${mangalDosha.person2.doshaPresent?(mangalDosha.person2.cancelled?'cancelled':'present'):'absent'}">
+        <div class="dosha-title">Mangal Dosha — Person 2</div>
+        <div class="dosha-note">${mangalDosha.person2.note}</div>
+      </div>
+    </div>
+
+    <div class="crosscheck">
+      <strong>Cross-check against Drik Panchang matching tool:</strong><br/><br/>
+      Go to <code>drikpanchang.com</code> → Kundali Matching.<br/>
+      Person 1: Moon in <strong>${moon1.nakshatra}</strong> Pada ${moon1.pada} (${moon1.sign})<br/>
+      Person 2: Moon in <strong>${moon2.nakshatra}</strong> Pada ${moon2.pada} (${moon2.sign})<br/><br/>
+      Compare: Ashta Koota total (we show <strong>${ashtaKoota.total}/36</strong>), individual factor scores, Nadi Dosha status, Rajju, Vedha.<br/>
+      Note any discrepancies in Yoni, Bhakoot, or Gana — these are the factors with the most textual variation.
+    </div>
+  `;
+
+  document.getElementById('loader').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+run().catch(e=>showErr(e.stack||e.message));
+</script>
+</body>
+</html>

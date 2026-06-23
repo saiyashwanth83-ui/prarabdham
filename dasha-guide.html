@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="The Vimshottari Dasha system — understanding planetary time periods and how to use them."/>
+  <title>Dasha Guide — Prarabdham</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .content-page { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    .content-page h1 { color: var(--gold); font-size: clamp(1.8rem,4vw,2.6rem); margin-bottom:.5rem; }
+    .content-page h2 { font-size: clamp(1.3rem,3vw,1.75rem); color: var(--gold); margin: 3rem 0 1rem; padding-bottom:.4rem; border-bottom:1px solid var(--border); }
+    .content-page h3 { font-size:1.15rem; color:var(--text); margin:2rem 0 .6rem; }
+    .content-page p { color:var(--text-2); line-height:1.82; margin-bottom:.9rem; }
+    .content-page ul { color:var(--text-2); line-height:1.8; padding-left:1.5rem; margin-bottom:1rem; }
+    .content-page li { margin-bottom:.4rem; }
+    .content-page strong { color:var(--text); }
+    .content-note {
+      font-style:italic; color:var(--text-3); font-size:.92rem;
+      border-left:3px solid var(--gold-dim); padding:.5rem 1rem;
+      background:rgba(201,168,76,.04); border-radius:0 var(--r) var(--r) 0;
+      margin:1.5rem 0;
+    }
+    .page-note {
+      background:var(--bg-2); border:1px solid var(--border);
+      border-left:3px solid var(--gold-dim); border-radius:var(--r);
+      padding:1rem 1.25rem; font-size:.88rem; color:var(--text-3);
+      font-style:italic; margin:2.5rem 0;
+    }
+    .ref-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin:1.5rem 0; }
+    .ref-card {
+      background:var(--bg-2); border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:1.2rem 1.4rem;
+      transition:border-color .2s;
+    }
+    .ref-card:hover { border-color:var(--gold-dim); }
+    .ref-card-name { font-size:.95rem; color:var(--gold); font-family:var(--font-head); margin-bottom:.4rem; }
+    .ref-card p { font-size:.88rem; margin-bottom:0; }
+    .callout {
+      background:rgba(201,168,76,.06); border:1px solid var(--gold-dim);
+      border-radius:var(--r-lg); padding:1.5rem 1.75rem; margin:2rem 0;
+    }
+    .callout p { color:var(--text-2); font-size:.95rem; margin-bottom:.75rem; }
+    .callout p:last-child { margin-bottom:0; }
+    table.traditions { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:.88rem; }
+    table.traditions th { padding:.45rem .75rem; text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); border-bottom:1px solid var(--border); font-family:var(--font-mono); }
+    table.traditions td { padding:.5rem .75rem; border-bottom:1px solid rgba(58,52,82,.4); color:var(--text-2); }
+    table.traditions td:first-child { color:var(--text); font-family:var(--font-head); }
+    .nak-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:.75rem; margin:1.5rem 0; }
+    .nak-item { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r); padding:.9rem 1rem; }
+    .nak-item-name { font-size:.88rem; color:var(--gold); font-family:var(--font-head); margin-bottom:.3rem; }
+    .nak-item p { font-size:.82rem; margin-bottom:0; }
+    .glossary-grid { columns:2; column-gap:2rem; }
+    .glossary-item { break-inside:avoid; margin-bottom:1.2rem; }
+    .glossary-term { font-size:.95rem; color:var(--gold); font-family:var(--font-head); margin-bottom:.2rem; }
+    .glossary-def { font-size:.88rem; color:var(--text-2); line-height:1.72; }
+    @media(max-width:600px) {
+      .glossary-grid { columns:1; }
+      .nak-grid { grid-template-columns:1fr; }
+      .ref-grid { grid-template-columns:1fr; }
+    }
+    
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo-small">prar<span>a</span>bdham</a>
+    <nav>
+      <a href="chart.html">Chart</a>
+      <a href="what-is-astrology.html">What is Astrology</a>
+      <a href="why-astrology.html">Why Astrology</a>
+      <a href="how-it-helps.html">How It Helps</a>
+      <span class="nav-lang" title="Language toggle coming soon">EN</span>
+    </nav>
+  </div>
+</header>
+<main>
+<div class="content-page">
+
+<h1>Dasha Guide</h1>
+<div class="content-note">The descriptions here are brief by intention. Detailed interpretation of your specific Dasha periods is given in your chart reading. This section exists only to give you a foundational understanding of what the Vimshottari Dasha system represents.</div>
+<div class="page-note">A note before reading: The Vimshottari Dasha system is a time period system — it shows the quality and direction of different phases of a life. Each phase is ruled by a specific planet whose nature colours the experiences and opportunities of that period. The system spans 120 years total across all nine planetary periods. Your specific Dasha sequence begins from the Nakshatra of your Moon at birth.</div>
+
+<h2>What a Dasha Period Is</h2>
+<p>A Dasha period is not a prediction of specific events. It is a description of the quality of energy operating during a specific phase of life — what themes will be prominent, what areas of life will be most active, and what the soul is being asked to develop or confront during that time.</p>
+<p>Within each Maha Dasha — the main period — there are Antardashas, sub periods ruled by each planet in sequence. Within each Antardasha there are Pratyantardashas — sub sub periods.</p>
+<p>The most important thing to understand about Dashas is this — the planet ruling a Dasha period does not act in isolation. It acts through the specific condition of that planet in your birth chart. The Dasha activates what is already present in the chart — it does not create something new.</p>
+
+<h2>The Nine Maha Dashas</h2>
+<div class="ref-grid">
+  <div class="ref-card"><div class="ref-card-name">Surya Dasha — 6 years</div><p>A period where themes of identity, self expression, authority, and the soul's genuine direction come to the foreground.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Chandra Dasha — 10 years</div><p>A period where emotional life, inner stability, and the quality of one's relationship with the mind become prominent.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Kuja Dasha — 7 years</div><p>A period where energy, effort, courage, and the capacity for decisive action come to the foreground.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Rahu Dasha — 18 years</div><p>One of the longest Dasha periods. Rahu's energy is intense, ambitious, and often disorienting — because it pushes the soul toward unfamiliar territory.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Guru Dasha — 16 years</div><p>A period where wisdom, expansion, meaning, and genuine growth come to the foreground.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Shani Dasha — 19 years</div><p>The longest Dasha period. Saturn's energy is slow, disciplined, and demanding — it brings exactly what is needed for genuine development.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Budha Dasha — 17 years</div><p>A period where communication, intelligence, learning, and discernment come to the foreground.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Ketu Dasha — 7 years</div><p>A period of significant inner turning. Ketu's energy moves toward detachment, dissolution, and the recognition of what is genuinely real beneath surface experience.</p></div>
+  <div class="ref-card"><div class="ref-card-name">Shukra Dasha — 20 years</div><p>The longest Dasha period after Saturn. Venus's energy brings themes of relationship, creativity, beauty, and the refinement of experience to the foreground.</p></div>
+</div>
+
+<h2>Antardasha — Sub Periods</h2>
+<p>Within each Maha Dasha, the nine planets each rule a sub period in sequence. The Antardasha planet's energy combines with the Maha Dasha planet's energy — sometimes harmoniously, sometimes with friction, depending on their relationship in the natal chart.</p>
+
+<h2>How to Use Your Dasha Timeline</h2>
+<p>Use it as a map of the quality of different life phases — not as a prediction of specific events. A difficult Dasha period is not punishment. It is the soul working through specific karma that needs to be addressed. A beneficial Dasha period is not guaranteed ease — it is an opening, which still requires conscious engagement to be genuinely fruitful.</p>
+<div class="page-note">The Dasha system is one of the most powerful tools in Jyotish for understanding the timing of life. But it must always be read in conjunction with the natal chart and current transits for a complete picture. No Dasha period should be interpreted in isolation.</div>
+
+</div>
+</main>
+<footer>
+  <div class="container">
+    <p>Made with purpose, free forever.</p>
+    <p style="font-size:.78rem;color:#C9A84C;margin-top:.3rem;font-family:var(--font-mono)">7474YASH</p>
+    <div class="footer-links">
+      <a href="chart.html">Know Your Chart</a>
+      <a href="what-is-astrology.html">What is Astrology</a>
+      <a href="why-astrology.html">Why Astrology</a>
+      <a href="how-it-helps.html">How It Helps</a>
+      <a href="planets.html">Planets</a>
+      <a href="rasi.html">Rasi</a>
+      <a href="houses.html">Houses</a>
+      <a href="nakshatras.html">Nakshatras</a>
+      <a href="dasha-guide.html">Dasha Guide</a>
+      <a href="glossary.html">Glossary</a>
+      <a href="parihara.html">Parihara</a>
+      <a href="sadhana-path.html">Sadhana Path</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prarabdham — Chart Interpretation</title>
+  <style>
+    :root {
+      --bg:#0d0d14;--surface:#16161f;--surface2:#1e1a2e;--border:#2a2a3a;
+      --gold:#c9a84c;--gold-dim:#7a6230;--gold-bg:rgba(201,168,76,.06);
+      --text:#e8e4d9;--text-dim:#8a8677;--text-muted:#5a5470;
+      --pass:#4caf7a;--warn:#e0a85c;--fail:#e05c5c;
+      --font:'Georgia',serif;--mono:'Courier New',monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;}
+
+    /* Layout */
+    .page{max-width:780px;margin:0 auto;padding:2rem 1.25rem 4rem;}
+    header{text-align:center;padding:3rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem;}
+    header h1{font-size:1.8rem;color:var(--gold);letter-spacing:.06em;margin-bottom:.5rem;}
+    header p{color:var(--text-dim);font-size:.9rem;}
+
+    /* Section headers */
+    .sec-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;
+      color:var(--gold-dim);margin-bottom:.75rem;padding-bottom:.35rem;
+      border-bottom:1px solid var(--border);}
+
+    /* Report sections */
+    .report-section{margin-bottom:2.5rem;}
+    .reading-block{background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:1.25rem 1.4rem;font-size:.9rem;line-height:1.8;
+      color:var(--text);}
+    .reading-block p{margin-bottom:.75rem;}
+    .reading-block p:last-child{margin-bottom:0;}
+
+    /* House readings */
+    .house-grid{display:flex;flex-direction:column;gap:.75rem;}
+    .house-card{background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;}
+    .house-card.inactive{opacity:.45;}
+    .house-head{padding:.5rem 1rem;background:var(--gold-bg);
+      border-bottom:1px solid var(--border);display:flex;
+      align-items:baseline;gap:.75rem;}
+    .house-num{font-size:.78rem;color:var(--gold);font-family:var(--mono);
+      text-transform:uppercase;letter-spacing:.08em;}
+    .house-sign{font-size:.82rem;color:var(--text-dim);}
+    .house-occupants{display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto;}
+    .occ-badge{background:var(--surface2);border:1px solid var(--border);
+      border-radius:3px;padding:.05rem .4rem;font-size:.7rem;
+      font-family:var(--mono);color:var(--text);}
+    .occ-badge.retro{color:var(--gold);}
+    .house-body{padding:.9rem 1rem;font-size:.83rem;line-height:1.75;color:var(--text-dim);}
+    .house-aspects{font-size:.75rem;color:var(--text-muted);margin-top:.4rem;
+      font-family:var(--mono);}
+
+    /* Yoga cards */
+    .yoga-card{background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:1rem 1.2rem;margin-bottom:.75rem;
+      border-left:3px solid var(--pass);}
+    .yoga-name{font-size:.95rem;color:var(--gold);margin-bottom:.35rem;}
+    .yoga-detected{font-size:.75rem;color:var(--text-dim);font-family:var(--mono);
+      margin-bottom:.5rem;}
+    .yoga-reading{font-size:.85rem;line-height:1.75;}
+    .yoga-uncertainty{font-size:.75rem;color:var(--warn);margin-top:.5rem;
+      padding:.4rem .6rem;background:rgba(224,168,92,.07);border-radius:4px;}
+    .placeholder-flag{color:var(--warn);font-size:.72rem;font-family:var(--mono);
+      background:rgba(224,168,92,.08);padding:.1rem .4rem;border-radius:3px;
+      display:inline-block;margin-bottom:.3rem;}
+
+    /* Dasha block */
+    .dasha-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;}
+    .dasha-chip{background:var(--surface2);border:1px solid var(--border);
+      border-radius:5px;padding:.3rem .75rem;font-size:.78rem;font-family:var(--mono);}
+    .dasha-chip .label{color:var(--text-dim);font-size:.65rem;display:block;
+      text-transform:uppercase;letter-spacing:.06em;}
+    .dasha-chip .value{color:var(--gold);}
+
+    /* Summary */
+    .summary-block{background:var(--gold-bg);border:1px solid var(--gold-dim);
+      border-radius:8px;padding:1.25rem 1.4rem;font-size:.9rem;line-height:1.8;}
+
+    /* Closing note */
+    .closing-note{background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:1.25rem 1.4rem;font-size:.82rem;
+      line-height:1.75;color:var(--text-dim);margin-top:2.5rem;
+      border-top:2px solid var(--gold-dim);}
+    .closing-note .label{font-size:.68rem;text-transform:uppercase;
+      letter-spacing:.1em;color:var(--gold-dim);margin-bottom:.5rem;}
+
+    /* Placeholder indicator */
+    .ph{color:var(--warn);}
+
+    /* Loader / error */
+    .loader{text-align:center;padding:4rem;color:var(--text-dim);}
+    .spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border);
+      border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;
+      margin-right:.6rem;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .err{background:#1c0808;border:1px solid var(--fail);border-radius:6px;
+      padding:1rem;color:#fca5a5;font-family:var(--mono);font-size:.82rem;display:none;}
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Prarabdham</h1>
+    <p>Chart Reading · January 15, 1990 · 10:30 AM IST · Chennai, India</p>
+  </header>
+
+  <div id="err" class="err"></div>
+  <div class="loader" id="loader"><span class="spinner"></span>Calculating chart…</div>
+  <div id="report" style="display:none"></div>
+</div>
+
+<script type="module">
+import { getCoordinates, getTimezone, getJulianDay, getLagna, getPlanets, getHouses } from '../js/calculations/core.js';
+import { getMahaDashas, getDashaBalance, getCurrentDasha, getAntardashas, getPratyantardashas } from '../js/calculations/dasha.js';
+import { getFullDignityReport } from '../js/calculations/dignity.js';
+import { getAllYogas, getHouseLords } from '../js/calculations/yoga.js';
+import { buildChartReport } from '../js/rendering/interpretation.js';
+
+const SIGNS_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+  'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+function showErr(msg){
+  document.getElementById('err').textContent='⚠ '+msg;
+  document.getElementById('err').style.display='block';
+  document.getElementById('loader').style.display='none';
+}
+
+function isPlaceholder(text){ return text && text.startsWith('PLACEHOLDER'); }
+
+function renderText(text){
+  if (!text) return '';
+  if (isPlaceholder(text)) return `<span class="ph">[${text}]</span>`;
+  return text.split('\n\n').map(p => `<p>${p}</p>`).join('');
+}
+
+async function run(){
+  // ── Calculate base chart ──
+  let coords, tz, jdr;
+  try{
+    coords = await getCoordinates('Chennai, India');
+    tz     = await getTimezone(coords.latitude, coords.longitude);
+    jdr    = await getJulianDay(1990,1,15,10,30,tz.timezone);
+  }catch(e){ showErr(e.message); return; }
+
+  const jd = jdr.julianDay;
+  let planets, lagna;
+  try{
+    [planets, lagna] = await Promise.all([
+      getPlanets(jd,'lahiri'),
+      getLagna(jd,coords.latitude,coords.longitude,'lahiri'),
+    ]);
+  }catch(e){ showErr(e.message); return; }
+
+  // ── Whole Sign houses ──
+  const lagnaSignIdx = SIGNS_ORDER.indexOf(lagna.sign);
+  const planetHouses = {};
+  for (const [name, planet] of Object.entries(planets)){
+    const pSignIdx = SIGNS_ORDER.indexOf(planet.sign);
+    planetHouses[name] = ((pSignIdx - lagnaSignIdx + 12) % 12) + 1;
+  }
+  planetHouses['Lagna'] = 1;
+
+  // ── Dasha ──
+  const birthDate  = new Date(Date.UTC(1990,0,15,5,0,0));
+  const mahaDashas = getMahaDashas(planets.Moon.longitude, birthDate);
+  const today      = new Date();
+  const currentDasha = getCurrentDasha(mahaDashas, today);
+  let antardasha = null, pratyantardasha = null;
+  if(currentDasha?.mahaDasha){
+    const ads = getAntardashas(currentDasha.mahaDasha);
+    antardasha = ads.find(a => today >= new Date(a.startDate) && today < new Date(a.endDate)) || ads[0];
+    if(antardasha){
+      const pds = getPratyantardashas(antardasha);
+      pratyantardasha = pds.find(p => today >= new Date(p.startDate) && today < new Date(p.endDate)) || pds[0];
+    }
+  }
+
+  // ── Dignity ──
+  const dignityReport = getFullDignityReport(planets, lagna, planetHouses, planets.Sun?.longitude);
+
+  // ── Yogas ──
+  const yogas = getAllYogas(planets, planetHouses, lagna.sign);
+
+  // ── Assemble chartData ──
+  const chartData = {
+    lagna,
+    planets,
+    dashas: {
+      current: {
+        mahaDasha:        currentDasha?.mahaDasha    || null,
+        antardasha:       antardasha                 || null,
+        pratyantardasha:  pratyantardasha            || null,
+      },
+      sequence: mahaDashas,
+    },
+    yogas,
+    dignityReport,
+  };
+
+  // ── Build report ──
+  const report = buildChartReport(chartData);
+
+  // ── Render ──
+  const el = document.getElementById('report');
+  el.innerHTML = `
+
+    <!-- Lagna -->
+    <div class="report-section">
+      <div class="sec-label">Lagna — ${lagna.sign} ${lagna.degrees}° ${String(lagna.minutes).padStart(2,'0')}'  ·  ${lagna.nakshatra} Pada ${lagna.pada}</div>
+      <div class="reading-block">${renderText(report.lagnaReading)}</div>
+    </div>
+
+    <!-- Dasha -->
+    <div class="report-section">
+      <div class="sec-label">Current Dasha Period</div>
+      ${currentDasha?.mahaDasha ? `
+      <div class="dasha-row">
+        <div class="dasha-chip"><span class="label">Maha Dasha</span><span class="value">${currentDasha.mahaDasha.planet}</span></div>
+        ${antardasha ? `<div class="dasha-chip"><span class="label">Antardasha</span><span class="value">${antardasha.planet}</span></div>` : ''}
+        ${pratyantardasha ? `<div class="dasha-chip"><span class="label">Pratyantardasha</span><span class="value">${pratyantardasha.planet}</span></div>` : ''}
+      </div>` : ''}
+      <div class="reading-block">${renderText(report.dashaReading)}</div>
+    </div>
+
+    <!-- Yogas -->
+    ${report.yogaReadings.length ? `
+    <div class="report-section">
+      <div class="sec-label">Detected Yogas (${report.yogaReadings.length})</div>
+      ${report.yogaReadings.map(y => `
+        <div class="yoga-card">
+          <div class="yoga-name">${y.name}</div>
+          <div class="yoga-detected">${y.description}</div>
+          <div class="yoga-reading">${renderText(y.reading)}</div>
+          ${y.uncertainty ? `<div class="yoga-uncertainty">⚠ ${y.uncertainty}</div>` : ''}
+        </div>`).join('')}
+    </div>` : ''}
+
+    <!-- Houses -->
+    <div class="report-section">
+      <div class="sec-label">House Readings</div>
+      <div class="house-grid">
+        ${report.houseReadings.map(h => {
+          const occBadges = h.occupants.map(o => {
+            const retro = planets[o]?.isRetrograde;
+            return `<span class="occ-badge${retro?' retro':''}">${o}${retro?' ℞':''}</span>`;
+          }).join('');
+          const aspStr = h.aspects.length
+            ? h.aspects.map(a=>`${a.planet}(${a.aspectType})`).join(' · ')
+            : '';
+          return `<div class="house-card${h.isActive?'':' inactive'}">
+            <div class="house-head">
+              <span class="house-num">H${h.houseNumber}</span>
+              <span class="house-sign">${h.sign}</span>
+              <span class="house-occupants">${occBadges}</span>
+            </div>
+            <div class="house-body">
+              ${renderText(h.reading)}
+              ${aspStr ? `<div class="house-aspects">Aspects: ${aspStr}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="report-section">
+      <div class="sec-label">Summary</div>
+      <div class="summary-block">${renderText(report.summary)}</div>
+    </div>
+
+    <!-- Closing note — always last, always present -->
+    <div class="closing-note">
+      <div class="label">A note on this reading</div>
+      ${report.closingNote}
+    </div>
+  `;
+
+  document.getElementById('loader').style.display='none';
+  el.style.display='block';
+}
+
+run().catch(e=>showErr(e.stack || e.message));
+</script>
+</body>
+</html>

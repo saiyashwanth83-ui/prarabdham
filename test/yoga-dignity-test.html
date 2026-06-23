@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yoga & Dignity — Test</title>
+  <style>
+    :root {
+      --bg:#0d0d14;--surface:#16161f;--border:#2a2a3a;
+      --gold:#c9a84c;--gold-dim:#7a6230;
+      --text:#e8e4d9;--text-dim:#8a8677;
+      --pass:#4caf7a;--fail:#e05c5c;--warn:#e0a85c;--info:#5b9bd5;
+      --font:'Georgia',serif;--mono:'Courier New',monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);padding:2rem 1rem;}
+    header{text-align:center;padding:2rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem;}
+    header h1{font-size:1.5rem;color:var(--gold);letter-spacing:.04em;margin-bottom:.4rem;}
+    header p{color:var(--text-dim);font-size:.88rem;}
+    .wrap{max-width:960px;margin:0 auto;}
+    .section{margin-bottom:2.5rem;}
+    h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold-dim);
+      margin-bottom:1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
+    /* Tables */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1rem;}
+    table{width:100%;border-collapse:collapse;font-size:.8rem;}
+    th{padding:.4rem .75rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;
+      color:var(--text-dim);border-bottom:1px solid var(--border);text-align:left;font-family:var(--mono);}
+    td{padding:.42rem .75rem;border-bottom:1px solid rgba(42,42,58,.5);font-family:var(--mono);}
+    tr:last-child td{border-bottom:none;}
+    td:first-child{font-family:var(--font);font-size:.82rem;color:var(--text);}
+    .exalted{color:#7dd87d;} .own{color:#5bc4e0;} .friendly{color:#a8d4a8;}
+    .neutral{color:var(--text-dim);} .enemy{color:var(--warn);} .debilitated{color:var(--fail);}
+    .strong{color:var(--pass);} .moderate{color:var(--gold);} .challenged{color:var(--fail);}
+    .combust{color:var(--fail);font-weight:bold;}
+    .digbala{color:#7dd87d;}
+    .retro{color:var(--gold);}
+    .unc{color:var(--warn);font-size:.72rem;}
+    /* Yoga cards */
+    .yoga-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.75rem;}
+    .yoga-card.present{border-left:3px solid var(--pass);}
+    .yoga-card.absent{border-left:3px solid var(--border);}
+    .yoga-card.uncertain{border-left:3px solid var(--warn);}
+    .yoga-name{font-size:.95rem;color:var(--gold);margin-bottom:.3rem;}
+    .yoga-desc{font-size:.82rem;color:var(--text);margin-bottom:.4rem;font-family:var(--mono);}
+    .yoga-note{font-size:.72rem;color:var(--warn);margin-top:.3rem;}
+    .badge{display:inline-block;padding:.1rem .5rem;border-radius:3px;font-size:.68rem;font-weight:bold;margin-right:.4rem;}
+    .bp{background:var(--pass);color:#000;} .ba{background:#2a2a3a;color:var(--text-dim);}
+    .bw{background:var(--warn);color:#000;}
+    .house-lords{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem;}
+    .hl-item{background:#1e1a2e;border:1px solid var(--border);border-radius:4px;
+      padding:.2rem .5rem;font-size:.72rem;font-family:var(--mono);}
+    .loader{text-align:center;padding:3rem;color:var(--text-dim);}
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);
+      border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;
+      margin-right:.6rem;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .err{background:#1c0808;border:1px solid var(--fail);border-radius:6px;padding:1rem;
+      color:#fca5a5;font-family:var(--mono);font-size:.82rem;display:none;}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Yoga &amp; Dignity Analysis</h1>
+  <p>Birth: January 15, 1990 · 10:30 AM IST · Chennai · Pisces Lagna · Lahiri Ayanamsa</p>
+</header>
+<div class="wrap">
+  <div id="err" class="err"></div>
+  <div class="loader" id="loader"><span class="spinner"></span>Loading…</div>
+  <div id="app" style="display:none">
+
+    <div class="section">
+      <h2>House Lords — Pisces Lagna</h2>
+      <div class="house-lords" id="house-lords"></div>
+    </div>
+
+    <div class="section">
+      <h2>Planetary Dignity Report</h2>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>Planet</th><th>Sign</th><th>House</th>
+            <th>Dignity</th><th>Strength</th>
+            <th>Combust</th><th>Digbala</th><th>Retro</th><th>Notes</th>
+          </tr></thead>
+          <tbody id="dignity-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Yoga Detection — 6 Classical Yogas</h2>
+      <div id="yoga-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { getCoordinates, getTimezone, getJulianDay, getLagna, getPlanets, getHouses, getPlanetHouses } from '../js/calculations/core.js';
+import { getFullDignityReport } from '../js/calculations/dignity.js';
+import { getHouseLords, getAllYogas } from '../js/calculations/yoga.js';
+
+function showErr(msg){
+  document.getElementById('err').textContent='⚠ '+msg;
+  document.getElementById('err').style.display='block';
+  document.getElementById('loader').style.display='none';
+}
+
+async function run(){
+  let coords, tz, jdr;
+  try{
+    coords = await getCoordinates('Chennai, India');
+    tz     = await getTimezone(coords.latitude, coords.longitude);
+    jdr    = await getJulianDay(1990,1,15,10,30,tz.timezone);
+  }catch(e){ showErr(e.message); return; }
+
+  const jd = jdr.julianDay;
+  let planets, lagna, houses, planetHouses;
+  try{
+    [planets, lagna, houses] = await Promise.all([
+      getPlanets(jd,'lahiri'),
+      getLagna(jd,coords.latitude,coords.longitude,'lahiri'),
+      getHouses(jd,coords.latitude,coords.longitude,'lahiri'),
+    ]);
+    // Whole Sign houses: house = (planet sign index - lagna sign index + 12) % 12 + 1
+    // This matches Drik Panchang. core.js getPlanetHouses uses equal cusps which gives wrong results.
+    const SIGNS_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+      'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    const lagnaSignIdx = SIGNS_ORDER.indexOf(lagna.sign);
+    planetHouses = {};
+    for (const [name, planet] of Object.entries(planets)) {
+      const pSignIdx = SIGNS_ORDER.indexOf(planet.sign);
+      planetHouses[name] = ((pSignIdx - lagnaSignIdx + 12) % 12) + 1;
+    }
+    planetHouses['Lagna'] = 1;
+  }catch(e){ showErr(e.message); return; }
+
+  const lagnaSign  = lagna.sign;
+  const sunLon     = planets.Sun?.longitude;
+
+  // ── House lords ──
+  const lords = getHouseLords(lagnaSign);
+  document.getElementById('house-lords').innerHTML = lords.map((lord,i)=>
+    `<div class="hl-item">H${i+1}: ${lord}</div>`).join('');
+
+  // ── Dignity report ──
+  const dignityReport = getFullDignityReport(planets, lagna, planetHouses, sunLon);
+  const PLANET_ORDER  = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+
+  document.getElementById('dignity-body').innerHTML = PLANET_ORDER.map(name=>{
+    const d = dignityReport[name];
+    if(!d) return '';
+    const dig   = d.dignity;
+    const str   = d.strength?.rating || '—';
+    const comb  = d.combust;
+    const dgb   = d.digbala;
+    const unc   = d.uncertainty ? `<div class="unc">⚠ ${d.uncertainty}</div>` : '';
+    return `<tr>
+      <td>${name}</td>
+      <td>${d.sign}</td>
+      <td>${d.houseNumber ?? '—'}</td>
+      <td><span class="${dig}">${dig}</span></td>
+      <td><span class="${str}">${str} (${d.strength?.total?.toFixed(1) ?? '—'})</span></td>
+      <td>${comb ? (comb.combust ? `<span class="combust">YES ${comb.degrees}°</span>` : `No (${comb.degrees}°)`) : '—'}</td>
+      <td>${dgb ? (dgb.digbala ? `<span class="digbala">YES H${dgb.preferredHouse}</span>` : 'No') : '—'}</td>
+      <td>${d.isRetrograde ? '<span class="retro">℞</span>' : '—'}</td>
+      <td>${unc}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Yogas ──
+  const yogas = getAllYogas(planets, planetHouses, lagnaSign);
+
+  const YOGA_META = {
+    rajaYoga:         { name: 'Raja Yoga', hasUncertainty: false },
+    dhanaYoga:        { name: 'Dhana Yoga', hasUncertainty: false },
+    viparitaRajaYoga: { name: 'Vipareeta Raja Yoga', hasUncertainty: true },
+    panchaMahapurusha:{ name: 'Pancha Mahapurusha Yoga', hasUncertainty: false },
+    guruMangalaYoga:  { name: 'Guru Mangala Yoga', hasUncertainty: false },
+    neechaBhangaYoga: { name: 'Neecha Bhanga Raja Yoga', hasUncertainty: true },
+  };
+
+  document.getElementById('yoga-list').innerHTML = Object.entries(yogas).map(([key, result])=>{
+    const meta    = YOGA_META[key] || { name: key, hasUncertainty: false };
+    const present = result.present;
+    const cls     = present ? 'present' : (meta.hasUncertainty ? 'uncertain' : 'absent');
+    const badge   = present
+      ? `<span class="badge bp">PRESENT</span>`
+      : `<span class="badge ba">ABSENT</span>`;
+
+    // Sub-details
+    let details = '';
+    if(result.yogas?.length){
+      details = result.yogas.map(y=>{
+        const desc = y.description || (y.name ? `${y.name}: ${y.planet} in ${y.sign} H${y.house}` : JSON.stringify(y));
+        return `<div style="font-size:.75rem;color:var(--text-dim);margin-top:.2rem;font-family:var(--mono)">› ${desc}</div>`;
+      }).join('');
+    }
+
+    const note = result.uncertainty
+      ? `<div class="yoga-note">⚠ Uncertainty: ${result.uncertainty}</div>` : '';
+
+    return `<div class="yoga-card ${cls}">
+      <div class="yoga-name">${badge}${meta.name}</div>
+      <div class="yoga-desc">${result.description}</div>
+      ${details}
+      ${note}
+    </div>`;
+  }).join('');
+
+  document.getElementById('loader').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+run().catch(e=>showErr(e.message));
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Divisional Charts — All 16 Varga</title>
+  <style>
+    :root {
+      --bg:#0d0d14;--surface:#16161f;--border:#2a2a3a;
+      --gold:#c9a84c;--gold-dim:#7a6230;
+      --text:#e8e4d9;--text-dim:#8a8677;
+      --pass:#4caf7a;--fail:#e05c5c;--warn:#e0a85c;
+      --font:'Georgia',serif;--mono:'Courier New',monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);padding:2rem 1rem;}
+    header{text-align:center;padding:2rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem;}
+    header h1{font-size:1.6rem;color:var(--gold);letter-spacing:.04em;margin-bottom:.4rem;}
+    header p{color:var(--text-dim);font-size:.9rem;}
+    .wrap{max-width:1100px;margin:0 auto;}
+    .section{margin-bottom:2.5rem;}
+    .section h2{font-size:.9rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold-dim);margin-bottom:1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
+    .status-bar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.8rem 1.2rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;font-size:.88rem;margin-bottom:2rem;}
+    .s-pass{color:var(--pass);font-weight:bold;}.s-fail{color:var(--fail);font-weight:bold;}.s-dim{color:var(--text-dim);font-size:.78rem;}
+    .check-list{list-style:none;display:flex;flex-direction:column;gap:.4rem;}
+    .check-list li{display:flex;align-items:flex-start;gap:.6rem;font-family:var(--mono);font-size:.8rem;padding:.45rem .75rem;border-radius:5px;background:var(--surface);}
+    .check-list li.pass{border-left:3px solid var(--pass);}
+    .check-list li.fail{border-left:3px solid var(--fail);}
+    .badge{flex-shrink:0;padding:.1rem .45rem;border-radius:3px;font-size:.68rem;font-weight:bold;}
+    .bp{background:var(--pass);color:#000;}.bf{background:var(--fail);color:#fff;}
+    .varga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem;}
+    .varga-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+    .varga-card h3{padding:.55rem .9rem;font-size:.82rem;color:var(--gold);background:rgba(201,168,76,.07);border-bottom:1px solid var(--border);letter-spacing:.06em;}
+    .varga-card table{width:100%;border-collapse:collapse;font-size:.76rem;}
+    .varga-card th{padding:.3rem .65rem;font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);border-bottom:1px solid var(--border);text-align:left;font-family:var(--mono);}
+    .varga-card td{padding:.33rem .65rem;border-bottom:1px solid rgba(42,42,58,.5);font-family:var(--mono);}
+    .varga-card tr:last-child td{border-bottom:none;}
+    .varga-card td:first-child{color:var(--text);font-family:var(--font);font-size:.77rem;}
+    .verified{color:var(--pass);}.mismatch{color:var(--fail);}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+    .loader{text-align:center;padding:3rem;color:var(--text-dim);}
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-right:.6rem;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .err{background:#1c0808;border:1px solid var(--fail);border-radius:6px;padding:1rem;color:#fca5a5;font-family:var(--mono);font-size:.82rem;white-space:pre-wrap;margin-bottom:1rem;display:none;}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Divisional Charts — All 16 Varga</h1>
+  <p>Birth: January 15, 1990 · 10:30 AM IST · Chennai, India · Lahiri Ayanamsa</p>
+</header>
+<div class="wrap">
+  <div id="err" class="err"></div>
+  <div class="loader" id="loader"><span class="spinner"></span>Calculating all 16 Varga charts…</div>
+  <div id="app" style="display:none">
+    <div id="statusbar" class="status-bar"></div>
+
+    <div class="two-col">
+      <div class="section">
+        <h2>D9 Navamsa — Drik Panchang ±1°</h2>
+        <ul class="check-list" id="d9-checks"></ul>
+      </div>
+      <div class="section">
+        <h2>D60 Shashtiamsa — Drik Panchang ±1°</h2>
+        <ul class="check-list" id="d60-checks"></ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>All 16 Varga Charts</h2>
+      <div class="varga-grid" id="varga-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getCoordinates, getTimezone, getJulianDay, getLagna, getPlanets } from '../js/calculations/core.js';
+import { getAllVargaCharts } from '../js/calculations/divisional.js';
+
+const D9_REF = {
+  Sun:     { sign:'Capricorn',   deg:9,  min:30 },
+  Moon:    { sign:'Libra',       deg:1,  min:5  },
+  Mars:    { sign:'Aquarius',    deg:23, min:47 },
+  Mercury: { sign:'Virgo',       deg:10, min:31 },
+  Jupiter: { sign:'Sagittarius', deg:27, min:4  },
+  Venus:   { sign:'Pisces',      deg:4,  min:12 },
+};
+
+const D60_REF = {
+  Sun:     { sign:'Pisces',     deg:3,  min:23 },
+  Moon:    { sign:'Sagittarius',deg:7,  min:14 },
+  Mars:    { sign:'Aquarius',   deg:28, min:36 },
+  Mercury: { sign:'Scorpio',    deg:20, min:10 },
+  Jupiter: { sign:'Capricorn',  deg:10, min:33 },
+  Venus:   { sign:'Pisces',     deg:8,  min:1  },
+};
+
+const TOL9 = 1.0, TOL60 = 1.0;
+const PLANET_ORDER = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu','Lagna'];
+const CHART_LABELS = {
+  D1:'Rasi',D2:'Hora',D3:'Drekkana',D4:'Chaturthamsa',
+  D7:'Saptamsa',D9:'Navamsa',D10:'Dashamsa',D12:'Dwadashamsa',
+  D16:'Shodashamsa',D20:'Vimshamsa',D24:'Chaturvimshamsa',D27:'Bhamsa',
+  D30:'Trimshamsa',D40:'Khavedamsa',D45:'Akshavedamsa',D60:'Shashtiamsa',
+};
+
+function showErr(msg){
+  document.getElementById('err').textContent='⚠ '+msg;
+  document.getElementById('err').style.display='block';
+  document.getElementById('loader').style.display='none';
+}
+function decDeg(p){ return p.degrees + p.minutes/60; }
+
+function renderChecks(chart, ref, tol, elId) {
+  let pass=0, fail=0;
+  const html = Object.entries(ref).map(([planet, r])=>{
+    const c = chart[planet];
+    if(!c) { fail++; return `<li class="fail"><span class="badge bf">FAIL</span>${planet}: not found</li>`; }
+    const signOk = c.sign===r.sign;
+    const delta  = Math.abs(decDeg(c)-(r.deg+r.min/60));
+    const ok     = signOk && delta<=tol;
+    ok?pass++:fail++;
+    const notes=[];
+    if(!signOk) notes.push(`sign: got ${c.sign}`);
+    if(delta>tol) notes.push(`Δ${delta.toFixed(2)}°`);
+    return `<li class="${ok?'pass':'fail'}">
+      <span class="badge ${ok?'bp':'bf'}">${ok?'PASS':'FAIL'}</span>
+      <span>${planet}: <strong>${c.formatted}</strong> (exp ${r.sign} ${r.deg}° ${String(r.min).padStart(2,'0')}'${notes.length?' · '+notes.join(', '):''})</span>
+    </li>`;
+  }).join('');
+  document.getElementById(elId).innerHTML = html;
+  return { pass, fail };
+}
+
+async function run(){
+  let coords, tz, jdr;
+  try{
+    coords = await getCoordinates('Chennai, India');
+    tz     = await getTimezone(coords.latitude, coords.longitude);
+    jdr    = await getJulianDay(1990,1,15,10,30,tz.timezone);
+  }catch(e){ showErr(e.message); return; }
+
+  const jd = jdr.julianDay;
+  let planets, lagna;
+  try{
+    [planets, lagna] = await Promise.all([
+      getPlanets(jd,'lahiri'),
+      getLagna(jd, coords.latitude, coords.longitude,'lahiri'),
+    ]);
+  }catch(e){ showErr(e.message); return; }
+
+  const varga = getAllVargaCharts(planets, lagna);
+
+  const r9  = renderChecks(varga.D9,  D9_REF,  TOL9,  'd9-checks');
+  const r60 = renderChecks(varga.D60, D60_REF, TOL60, 'd60-checks');
+
+  const totalPass = r9.pass + r60.pass;
+  const totalFail = r9.fail + r60.fail;
+  const allOk = totalFail === 0;
+  document.getElementById('statusbar').innerHTML=`
+    <strong class="${allOk?'s-pass':'s-fail'}">${allOk?'✓ ALL CHECKS PASSED':`✗ ${totalFail} FAILURE(S)`}</strong>
+    <span class="s-pass">${totalPass} passed</span>
+    ${totalFail?`<span style="color:var(--fail)">${totalFail} failed</span>`:''}
+    <span class="s-dim">D9 ±${TOL9}° · D60 ±${TOL60}° · 16 charts computed</span>`;
+
+  // All 16 charts grid
+  document.getElementById('varga-grid').innerHTML = Object.entries(CHART_LABELS).map(([key, label])=>{
+    const chart = varga[key];
+    const rows = PLANET_ORDER.map(p=>{
+      const pos=chart[p]; if(!pos) return '';
+      let cls='';
+      if(key==='D9' && D9_REF[p]){
+        const r=D9_REF[p];
+        cls=(pos.sign===r.sign && Math.abs(decDeg(pos)-(r.deg+r.min/60))<=TOL9)?'verified':'mismatch';
+      }
+      if(key==='D60' && D60_REF[p]){
+        const r=D60_REF[p];
+        cls=(pos.sign===r.sign && Math.abs(decDeg(pos)-(r.deg+r.min/60))<=TOL60)?'verified':'mismatch';
+      }
+      return `<tr><td>${p}</td><td class="${cls}">${pos.formatted}</td><td style="color:var(--text-dim);font-size:.7rem">${pos.nakshatra}</td></tr>`;
+    }).join('');
+    return `<div class="varga-card">
+      <h3>${key} — ${label}</h3>
+      <table>
+        <thead><tr><th>Planet</th><th>Position</th><th>Nakshatra</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  document.getElementById('loader').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+run().catch(e=>showErr(e.message));
+</script>
+</body>
+</html>
