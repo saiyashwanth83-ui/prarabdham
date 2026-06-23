@@ -502,6 +502,7 @@ function renderOutput(data) {
 
   // Wire PDF button
   $('pdf-btn').onclick = () => window.print();
+}
 
 // ---------------------------------------------------------------------------
 // Start over
