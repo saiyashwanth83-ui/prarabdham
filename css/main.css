@@ -596,6 +596,8 @@ footer p { font-size: .85rem; color: var(--text-3); margin-bottom: .5rem; }
 }
 
 /* ── Print / PDF ── */
+.print-footer-brand { display: none; } /* hidden on screen, shown in print only */
+
 @media print {
   /* Hide everything except chart output */
   .site-header, footer, .output-actions,
@@ -603,17 +605,16 @@ footer p { font-size: .85rem; color: var(--text-3); margin-bottom: .5rem; }
   #chart-input-section, .loading-overlay,
   #yoga-section .yoga-uncertainty { display: none !important; }
 
-  /* Page setup */
-  /* Suppress browser-native print headers/footers (URL, page number, date).
-     NOTE: @page margin:0 removes the browser URL/title from print headers.
-     Some browsers also require the user to uncheck "Headers and footers"
-     in the print dialog — this is a browser limitation we cannot fully
-     override in CSS alone for all browsers. */
+  /* Page setup.
+     The browser URL in print headers/footers is a browser-native behaviour.
+     Setting @page margin to 0 and adding body padding gives us full control
+     of the page canvas. In Chrome/Edge: also uncheck "Headers and footers"
+     in the print dialog for a fully clean output. */
   @page {
-    margin: 1.8cm 1.5cm 2cm;
+    margin: 0;
     size: A4 portrait;
   }
-  @page :first { margin-top: 1.8cm; }
+  html, body { padding: 1.8cm 1.5cm !important; }
   html, body { background: #fff !important; color: #1a1a1a !important; font-size: 11pt; }
   * { color: inherit !important; background: transparent !important;
       border-color: #ccc !important; box-shadow: none !important; }
@@ -683,19 +684,6 @@ footer p { font-size: .85rem; color: var(--text-3); margin-bottom: .5rem; }
   #planet-table + .out-section,
   .out-section:nth-child(4) { break-before: page; }
 
-  /* Print footer — 7474yash branding, replaces browser URL */
-  #chart-output::after {
-    content: "7474yash";
-    display: block;
-    text-align: center;
-    font-family: "Courier New", monospace;
-    font-size: 8pt;
-    color: #C9A84C;
-    margin-top: 1.5rem;
-    padding-top: .75rem;
-    border-top: 1px solid #ccc;
-  }
-
   /* Closing note — always last, distinct */
   .closing-note {
     break-before: always !important;
@@ -709,6 +697,19 @@ footer p { font-size: .85rem; color: var(--text-3); margin-bottom: .5rem; }
     margin-top: 1rem !important;
   }
   .closing-note-label { color: #555 !important; font-style: normal; }
+
+  /* 7474yash print footer — shown after closing note */
+  .print-footer-brand {
+    display: block !important;
+    text-align: center;
+    font-family: "Courier New", monospace;
+    font-size: 8pt;
+    color: #C9A84C !important;
+    margin-top: 1rem;
+    padding-top: .5rem;
+    border-top: 1px solid #ddd;
+    letter-spacing: .08em;
+  }
 
   /* Placeholder text — muted in print */
   .placeholder-text { color: #aaa !important; font-size: 8.5pt !important; }
