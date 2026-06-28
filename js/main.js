@@ -381,6 +381,212 @@ function renderVargaReadings(varga, lagna, planets, planetHouses) {
   ].join('');
 }
 
+// ---------------------------------------------------------------------------
+// Parihara Section
+// ---------------------------------------------------------------------------
+
+/**
+ * Identifies challenged planets and provides chart-specific parihara guidance.
+ * Uses dignity.js output — debilitated, combust, or enemy+challenged = triggered.
+ */
+function renderPariharaSection(dignityReport, currentDasha, lagna, planets, planetHouses) {
+  const PLANET_ORDER = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+
+  // Planet-specific parihara directions
+  const PLANET_PARIHARA = {
+    Sun: "The Sun's challenge in this chart calls for practices that strengthen authentic self-expression and the capacity to act from genuine inner authority rather than from need for external validation. Surya Namaskar — Sun Salutations — practiced with full attention at sunrise on Sunday mornings is the most direct and universally accessible Sun parihara. Chanting the Aditya Hridayam or the Surya Beeja mantra (Om Hraam Hreem Hraum Sah Suryaya Namaha) 108 times, preferably on Sundays, is widely practiced. The deeper sadhana direction for a challenged Sun is Svadhyaya — honest self-reflection — regularly asking what one genuinely is independent of how one is perceived.",
+    Moon: "The Moon's challenge in this chart points toward the need for deliberate cultivation of genuine inner stillness and emotional clarity. Chandra mantra (Om Som Somaya Namaha) practiced on Monday evenings, particularly on Purnima (full moon), is the classical approach. Nadi Shodhana — alternate nostril breathing — practiced regularly before sleep genuinely supports the Moon's domain of mind and emotional stability. Water-based practices and the regular offering of water to the Moon on full moon nights are simple and widely practiced forms of Chandra parihara.",
+    Mars: "The challenge of Mars in this chart calls for the conscious channelling of energy into purposeful, disciplined action rather than reactive force. Mangal mantra (Om Kraam Kreem Kraum Sah Bhaumaya Namaha) practiced on Tuesdays is the classical approach. Physical practice — Surya Namaskar with sustained focus, or any physical discipline maintained with genuine consistency — directly addresses Mars's domain of energy and directed will. Dana on Tuesdays, particularly of red lentils or copper items to those genuinely in need, is a traditional approach.",
+    Mercury: "The challenge of Mercury in this chart calls for the deliberate development of genuine discriminating intelligence alongside whatever communicative or analytical difficulty is present. Budha mantra (Om Braam Breem Braum Sah Budhaya Namaha) practiced on Wednesdays supports Mercury's domain. Reading genuine philosophy or wisdom texts with concentrated attention — Svadhyaya as a direct Mercury practice — is particularly appropriate. Green foods and items offered to students or those engaged in learning on Wednesdays is a simple and widely practiced Dana approach.",
+    Jupiter: "The challenge of Jupiter in this chart calls for genuine engagement with wisdom and dharmic practice rather than comfortable philosophical familiarity without lived depth. Guru mantra (Om Graam Greem Graum Sah Gurave Namaha) practiced on Thursdays is the classical approach. Offering food or teaching to those genuinely in need on Thursdays is a direct form of Guru parihara. The deeper sadhana direction for a challenged Jupiter is ensuring that whatever philosophical or spiritual framework is held is actually being lived — Jnana Yoga practiced honestly rather than as intellectual accumulation.",
+    Venus: "The challenge of Venus in this chart calls for the conscious development of genuine discernment in the domains of relationship, creativity, and value — developing the capacity to recognise what is genuinely beautiful and genuinely worth valuing rather than merely what is pleasant. Shukra mantra (Om Draam Dreem Draum Sah Shukraya Namaha) practiced on Fridays is the classical approach. Offering white flowers or sweets to those genuinely in need on Fridays is traditional. The deeper direction is developing genuine aesthetic discernment rather than merely sensory indulgence.",
+    Saturn: "The challenge of Saturn in this chart calls for the deliberate embrace of discipline, patience, and the honest confrontation of what is real rather than what is comfortable. Shani mantra (Om Praam Preem Praum Sah Shanaischaraya Namaha) practiced on Saturdays is the classical approach. Service to the elderly, the marginalised, or those engaged in difficult physical labour — offered without expectation of recognition — is among the most direct forms of Saturn parihara. The deeper direction is engaging consciously with whatever Saturn is asking for rather than resisting its demands.",
+    Rahu: "The challenge of Rahu in this chart calls for the development of genuine inner grounding and discriminating awareness in the face of amplified desire and the pull toward the novel and the unconventional. Rahu mantra (Om Raam Rahave Namaha) practiced on Saturdays is widely used. Charitable giving without expectation — particularly to causes that address collective suffering — is a traditional Rahu parihara. The deeper direction is developing genuine Pratyahara — the conscious withdrawal of attention from the consuming pull of desire — through sustained daily practice.",
+    Ketu: "The challenge of Ketu in this chart calls for the honest engagement with what Ketu's placement is asking to be released — the development of conscious detachment in the specific domain Ketu occupies. Ketu mantra (Om Sraam Sreem Sraum Sah Ketave Namaha) practiced regularly is the classical approach. Charitable giving to spiritual institutions or to those engaged in genuine inner work is a traditional form of Ketu parihara. The deeper direction is developing genuine Dhyana — meditative absorption — allowing the natural dissolving quality of Ketu to become genuine spiritual practice rather than a source of vagueness or disconnection.",
+  };
+
+  // Identify challenged planets
+  const challenged = [];
+  for (const name of PLANET_ORDER) {
+    const d = dignityReport[name];
+    if (!d) continue;
+    const isChallenged =
+      d.dignity === 'debilitated' ||
+      (d.combust && d.combust.combust) ||
+      (d.dignity === 'enemy' && d.strength && d.strength.rating === 'challenged');
+    if (isChallenged) {
+      challenged.push({ name, dignity: d.dignity, combust: d.combust?.combust, strength: d.strength?.rating });
+    }
+  }
+
+  let html = '';
+
+  if (challenged.length === 0) {
+    html += `<div class="interp-block"><p>No planets in this chart meet the classical criteria for challenged placement — debilitation, combustion, or enemy sign with low overall strength. The four foundational practices below remain universally applicable regardless of chart condition.</p></div>`;
+  } else {
+    html += `<div class="interp-block">`;
+    html += `<p>The following planets in this chart carry specific challenges — debilitation, combustion close to the Sun, or placement in an enemy sign with low overall strength. Each calls for a specific direction of conscious engagement.</p>`;
+    html += `</div>`;
+
+    for (const p of challenged) {
+      const reasons = [];
+      if (p.dignity === 'debilitated') reasons.push('debilitated');
+      if (p.combust) reasons.push('combust');
+      if (p.dignity === 'enemy' && p.strength === 'challenged') reasons.push('in enemy sign with low strength');
+      const reasonStr = reasons.join(', ');
+
+      html += `<div class="interp-section" style="margin-bottom:1rem">
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold-dim);font-family:var(--font-mono);margin-bottom:.5rem">${p.name} — ${reasonStr}</div>
+        <div class="interp-block">${PLANET_PARIHARA[p.name] || `${p.name} parihara: mantra practice on the day associated with this planet, dana appropriate to its domain, and the sadhana direction described in the house reading above.`}</div>
+      </div>`;
+    }
+  }
+
+  // Universal practices — verbatim from parihara.html content
+  html += `<div class="interp-section" style="margin-top:1.5rem">
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold-dim);font-family:var(--font-mono);margin-bottom:.5rem">Universal Practices — Safe for Every Chart</div>
+    <div class="interp-block">
+      <p><strong>Surya Namaskar — Asana.</strong> Twelve postures moving in rhythm with the breath. A complete foundational practice accessible to most people. Daily practice — even a small number of rounds done with full attention — builds the physical foundation for everything else.</p>
+      <p><strong>Nadi Shodhana — Pranayama.</strong> Alternate nostril breathing. The most widely recommended foundational Pranayama practice. Balances both energy channels, calms the nervous system. Safe for general practice without intensive guidance. Begin with five to ten minutes daily.</p>
+      <p><strong>Svadhyaya — Self Study.</strong> Honest daily self-reflection. Turning the attention honestly toward one's own patterns, reactions, and inner states. This costs nothing, requires no teacher, and is perhaps the most powerful parihara available.</p>
+      <p><strong>Pratyahara — Conscious Withdrawal.</strong> Five to ten minutes daily of simply sitting, withdrawing attention from external stimulation, and turning it inward.</p>
+      <p style="font-style:italic;color:var(--text-3)">Gemstones, Yantra, and Homam require guidance from a qualified and experienced Pandit who has examined your complete chart. Prarabdham does not recommend specific gemstones for specific individuals. Approach all such recommendations with caution and always seek a second opinion.</p>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+// ---------------------------------------------------------------------------
+// Sadhana Map Section
+// ---------------------------------------------------------------------------
+
+/**
+ * Chart-specific sadhana direction based on Lagna, strongest/challenged planets,
+ * and current Dasha. Uses logic from how-it-helps.html content.
+ */
+function renderSadhanaMap(lagna, planets, planetHouses, dignityReport, currentDasha, report) {
+  const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+    'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const SIGN_LORD = {
+    Aries:'Mars',Taurus:'Venus',Gemini:'Mercury',Cancer:'Moon',
+    Leo:'Sun',Virgo:'Mercury',Libra:'Venus',Scorpio:'Mars',
+    Sagittarius:'Jupiter',Capricorn:'Saturn',Aquarius:'Saturn',Pisces:'Jupiter'
+  };
+
+  const lagnaSign = lagna.sign;
+  const lagnaLord = SIGN_LORD[lagnaSign];
+  const lagnaLordH = planetHouses[lagnaLord] || '?';
+  const mdPlanet = currentDasha?.mahaDasha?.planet || '—';
+
+  // Determine sadhana path indicators
+  const mercury = dignityReport['Mercury'];
+  const moon    = dignityReport['Moon'];
+  const venus   = dignityReport['Venus'];
+  const mars    = dignityReport['Mars'];
+  const saturn  = dignityReport['Saturn'];
+  const jupiter = dignityReport['Jupiter'];
+
+  const mercuryH = planetHouses['Mercury'];
+  const moonH    = planetHouses['Moon'];
+  const venusH   = planetHouses['Venus'];
+  const marsH    = planetHouses['Mars'];
+  const saturnH  = planetHouses['Saturn'];
+
+  // Score each path
+  let jnana = 0, bhakti = 0, karma = 0, raja = 0;
+
+  // Jnana indicators: strong Mercury, prominent 9th house, Jupiter strong
+  if (mercury && ['own','exalted','friendly'].includes(mercury.dignity)) jnana += 2;
+  if (mercuryH === 9 || mercuryH === 1) jnana += 1;
+  if (jupiter && ['own','exalted'].includes(jupiter.dignity)) jnana += 1;
+  if (['Gemini','Virgo'].includes(lagnaSign)) jnana += 1;
+
+  // Bhakti indicators: strong Moon/Venus, 12th house occupied, water Lagna
+  if (moon && ['own','exalted','friendly'].includes(moon.dignity)) bhakti += 2;
+  if (venus && ['own','exalted','friendly'].includes(venus.dignity)) bhakti += 1;
+  if (moonH === 12 || venusH === 12) bhakti += 1;
+  if (['Cancer','Scorpio','Pisces'].includes(lagnaSign)) bhakti += 2;
+
+  // Karma Yoga indicators: strong Mars/Saturn, 10th house occupied
+  if (mars && ['own','exalted'].includes(mars.dignity)) karma += 2;
+  if (saturn && ['own','exalted'].includes(saturn.dignity)) karma += 2;
+  if (marsH === 10 || saturnH === 10) karma += 1;
+  if (['Aries','Scorpio','Capricorn','Aquarius'].includes(lagnaSign)) karma += 1;
+
+  // Raja Yoga / Ashtanga indicators: Saturn dignified, disciplined Lagna, Jupiter+Saturn
+  if (saturn && ['own','exalted','friendly'].includes(saturn.dignity)) raja += 2;
+  if (['Capricorn','Aquarius','Virgo'].includes(lagnaSign)) raja += 1;
+  if (jupiter && saturn && ['own','exalted'].includes(jupiter.dignity)) raja += 1;
+
+  // Find highest scoring path(s)
+  const scores = { 'Jnana Yoga': jnana, 'Bhakti Yoga': bhakti, 'Karma Yoga': karma, 'Raja Yoga (Ashtanga)': raja };
+  const maxScore = Math.max(...Object.values(scores));
+  const primaryPaths = Object.entries(scores).filter(([,v]) => v === maxScore).map(([k]) => k);
+  const pathStr = primaryPaths.join(' and ');
+
+  // Path descriptions
+  const PATH_DESC = {
+    'Jnana Yoga': "The chart's indicators — a prominent Mercury, strong analytical capacity, and orientation toward the 9th house domain of wisdom and teaching — point toward Jnana Yoga as a natural sadhana direction. Jnana Yoga is the path of knowledge and honest self-inquiry: the sustained, patient practice of distinguishing the real from the unreal, the consciousness that observes from the patterns it observes. For this chart, the practice of Svadhyaya — systematic self-reflection and the study of genuine wisdom texts — is the most naturally aligned foundational approach.",
+    'Bhakti Yoga': "The chart's indicators — a prominent Moon and/or Venus, sensitivity to the subtle, and an orientation toward the water element — point toward Bhakti Yoga as a natural sadhana direction. Bhakti Yoga is the path of devotion: the complete offering of the self toward the source, dissolving the sense of separation through love rather than understanding. For this chart, the cultivation of genuine devotional practice — mantra, puja, or any form of heartfelt offering to what is genuinely sacred — is the most naturally aligned foundational approach.",
+    'Karma Yoga': "The chart's indicators — a strong Mars and/or Saturn, occupation of the 10th house, and an orientation toward disciplined purposeful action — point toward Karma Yoga as a natural sadhana direction. Karma Yoga is the path of conscious action: acting fully and completely in whatever domain calls for action, without attachment to results, working as an instrument of Dharma rather than for personal gain. For this chart, the key practice is bringing genuine inner presence and non-attachment to the work and effort that the chart already indicates are central life themes.",
+    'Raja Yoga (Ashtanga)': "The chart's indicators — a dignified Saturn, the capacity for sustained inner discipline, and the orientation toward systematic inner work — point toward Raja Yoga as a natural sadhana direction. Raja Yoga, as systematised by Patanjali in the Yoga Sutras, works directly with the mind and energy through the eight limbs of Ashtanga Yoga: from ethical conduct and personal discipline through to deep meditative absorption. For this chart, the regular practice of the foundational limbs — Surya Namaskar, Nadi Shodhana, Svadhyaya, and Pratyahara — is the most naturally aligned approach, with the deeper limbs developed under genuine guidance.",
+  };
+
+  const pathContent = primaryPaths.map(p => PATH_DESC[p] || '').join(' ');
+
+  // Find most significant emotional pattern from challenged or prominent planet
+  const PLANET_ORDER = ['Saturn','Mars','Moon','Rahu','Ketu','Sun','Jupiter','Venus','Mercury'];
+  let emotionPlanet = null;
+  for (const name of PLANET_ORDER) {
+    const d = dignityReport[name];
+    if (!d) continue;
+    if (d.dignity === 'debilitated' || (d.combust && d.combust.combust) ||
+        (d.dignity === 'enemy' && d.strength && d.strength.rating === 'challenged')) {
+      emotionPlanet = name;
+      break;
+    }
+  }
+  // Fallback: use Lagna lord
+  if (!emotionPlanet) emotionPlanet = lagnaLord;
+
+  const EMOTIONAL_PATTERNS = {
+    Sun:     "The emotional pattern most relevant as sadhana material in this chart is the relationship with recognition and authentic self-expression. The question that arises repeatedly is whether one's actions are coming from genuine inner clarity or from the need to be seen as significant, capable, or right. This is not a flaw — it is the specific friction this soul is working through. The practice is developing the capacity to act with full engagement and then release the result completely: doing without needing the doing to prove anything.",
+    Moon:    "The emotional pattern most relevant as sadhana material in this chart is the relationship with emotional security — the recurring question of whether genuine inner stability is available independent of outer circumstances. The mind tends to seek nourishment and reassurance from what is outside rather than from what is within. This is not a weakness — it is the specific terrain this soul is navigating. The practice is the deliberate cultivation of inner stillness — returning, again and again, to the awareness that is present beneath the fluctuation.",
+    Mars:    "The emotional pattern most relevant as sadhana material in this chart is the relationship with energy, frustration, and the impulse to force outcomes. The recurring experience is of encountering resistance and responding with an intensification of effort or an assertion of will. This is not a deficiency — it is the specific charge this soul is working with. The practice is developing the pause between impulse and action: the moment of genuine discernment that distinguishes courageous purposeful action from reactive force.",
+    Mercury: "The emotional pattern most relevant as sadhana material in this chart is the relationship with mental restlessness — the recurring experience of the mind moving from one thing to the next without settling. There may be anxiety around the gathering and processing of information, or a tendency to intellectualise emotional experience rather than feeling it directly. This is not a problem to be eliminated — it is the specific quality of mind this soul is refining. The practice is developing genuine Dharana: the capacity to hold the attention on one point without scattering.",
+    Jupiter: "The emotional pattern most relevant as sadhana material in this chart is the relationship with meaning and the recurring question of whether one's life is genuinely aligned with what matters most. There may be a tendency toward philosophical comfort — holding correct views about what is important while the actual living remains partial. This is not a spiritual failure — it is the specific gap this soul is being asked to close. The practice is the deliberate narrowing of the distance between what is understood and what is actually lived.",
+    Venus:   "The emotional pattern most relevant as sadhana material in this chart is the relationship with desire, attachment, and the recurring question of what is genuinely worth valuing. The soul tends to seek genuine beauty and genuine connection and may repeatedly encounter the gap between what is pleasant and what is genuinely nourishing. This is not a defect — it is the specific refinement this life is asking for. The practice is developing genuine Viveka in the domain of relationship and desire: the discriminating capacity to recognise what genuinely satisfies versus what merely temporarily appeases.",
+    Saturn:  "The emotional pattern most relevant as sadhana material in this chart is the relationship with difficulty, limitation, and the recurring experience of effort that seems disproportionate to result. There may be a tendency to experience Saturn's demands as punishment or unfairness rather than as the specific friction this soul needs in order to develop genuine inner strength. This is not misfortune — it is the specific material this life is made of. The practice is the deliberate cultivation of patient, non-resistant engagement with difficulty: Tapas as conscious purification rather than as mere endurance.",
+    Rahu:    "The emotional pattern most relevant as sadhana material in this chart is the relationship with desire's amplification — the recurring experience of intense wanting in specific domains of life that can feel consuming and disorienting. There may be difficulty distinguishing genuine need from amplified craving. This is not a corruption — it is the specific intensity this soul is learning to work with consciously. The practice is developing genuine Pratyahara: the cultivation of the capacity to witness desire without being identified with it.",
+    Ketu:    "The emotional pattern most relevant as sadhana material in this chart is the relationship with detachment and the recurring experience of not quite fitting — of feeling complete in domains where others still want more, and unfulfilled where others seem easily satisfied. This is not alienation — it is the specific quality of a soul that has already completed significant development and is now learning to engage with the present life from a place of genuine non-attachment rather than mere disconnection. The practice is the deliberate cultivation of conscious presence in the domains where Ketu is most active.",
+  };
+
+  const emotionContent = EMOTIONAL_PATTERNS[emotionPlanet] || "The emotional patterns most relevant as sadhana material are visible in the house readings above — each area of challenge is not a deficiency but specific material this soul is working through consciously.";
+
+  const block = (text) => `<div class="interp-block" style="margin-bottom:1rem"><p>${text}</p></div>`;
+
+  let html = '';
+
+  // Primary theme paragraph
+  html += block(`This chart is navigating through ${lagnaSign} Lagna — its primary lens is ${lagnaSign}'s quality of attention and engagement with the world. The Lagna lord ${lagnaLord} is placed in the ${lagnaLordH}th house, which is the primary channel through which this orientation finds concrete expression. The current Maha Dasha of ${mdPlanet} activates whatever ${mdPlanet} carries in this natal chart — bringing its specific sign, house, and dignity condition into primary focus as the quality of engagement this period is asking for.`);
+
+  // Sadhana path recommendation
+  html += `<div class="interp-block" style="margin-bottom:1rem">
+    <p><strong>Natural sadhana direction: ${pathStr}.</strong> ${pathContent}</p>
+  </div>`;
+
+  // Emotional pattern
+  html += block(emotionContent);
+
+  // Closing line
+  html += `<div class="interp-block">
+    <p style="font-style:italic;color:var(--text-2)">The chart shows the terrain. The walking is entirely your own.</p>
+  </div>`;
+
+  return html;
+}
+
 function renderYogaList(yogaReadings) {
   if (!yogaReadings.length) return '<p style="color:var(--text-3);font-size:.88rem">No Yogas detected in this chart.</p>';
   return yogaReadings.map(y => `
@@ -627,6 +833,16 @@ function renderOutput(data) {
   $('interp-dasha').innerHTML   = renderText(report.dashaReading);
   $('house-list').innerHTML     = renderHouseList(report.houseReadings, planets);
   $('interp-summary').innerHTML = renderText(report.summary);
+
+  // Parihara section
+  if ($('parihara-content')) {
+    $('parihara-content').innerHTML = renderPariharaSection(dignityReport, currentDasha, lagna, planets, planetHouses);
+  }
+
+  // Sadhana Map section
+  if ($('sadhana-content')) {
+    $('sadhana-content').innerHTML = renderSadhanaMap(lagna, planets, planetHouses, dignityReport, currentDasha, report);
+  }
 
   // Closing note (always shown)
   $('closing-note-text').textContent = report.closingNote;
