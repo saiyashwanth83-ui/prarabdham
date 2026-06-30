@@ -108,17 +108,17 @@
       .dosha-title { color: #1a1a1a !important; }
       .dosha-note { color: #444 !important; }
 
-      /* Educational content shows in print, with page breaks before major sections */
+      /* Educational content shows in print, flowing naturally without forced page breaks
+         — only avoid breaking in the middle of a single section's heading+text block */
       .match-print-content { display: block !important; }
-      .match-print-content .out-title { break-before: page; }
-      .match-print-content .out-title:first-child { break-before: auto; }
-      .match-print-content .interp-block { font-size: 10pt; line-height: 1.65; color: #333 !important;
-        border: 1px solid #ccc !important; background: #fafafa !important; padding: .75rem !important;
-        break-inside: avoid; margin-bottom: 1rem; }
+      .match-print-content .out-title { break-after: avoid; margin-top: .9rem; }
+      .match-print-content .interp-block { font-size: 9.5pt; line-height: 1.55; color: #333 !important;
+        border: 1px solid #ccc !important; background: #fafafa !important; padding: .6rem .75rem !important;
+        break-inside: avoid; margin-bottom: .75rem; }
 
-      .closing-note { break-before: page; border: 1px solid #999 !important; border-top: 2px solid #555 !important;
+      .closing-note { border: 1px solid #999 !important; border-top: 2px solid #555 !important;
         background: #f9f9f9 !important; padding: 1rem !important; font-size: 9pt !important; color: #444 !important;
-        font-style: italic; }
+        font-style: italic; break-inside: avoid; margin-top: 1rem; }
       .closing-note-label { color: #555 !important; font-style: normal; }
 
       /* 7474yash brand — print footer, no browser URL */
